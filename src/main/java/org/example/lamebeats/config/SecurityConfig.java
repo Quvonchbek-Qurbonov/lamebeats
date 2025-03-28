@@ -18,7 +18,6 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/api/users/register").permitAll()
                         .requestMatchers("/api/**").permitAll()  // For development - permit all API access
                         .anyRequest().authenticated()
                 );

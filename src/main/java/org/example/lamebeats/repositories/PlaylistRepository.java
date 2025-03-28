@@ -2,6 +2,8 @@ package org.example.lamebeats.repositories;
 
 import org.example.lamebeats.models.Playlist;
 import org.example.lamebeats.models.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,9 +27,17 @@ public interface PlaylistRepository extends JpaRepository<Playlist, UUID> {
     @Query("SELECT p FROM Playlist p WHERE p.user.id = :userId AND p.deletedAt IS NULL")
     List<Playlist> findActiveByUserId(@Param("userId") UUID userId);
 
+    // Find all active playlists by user ID (paginated)
+    @Query("SELECT p FROM Playlist p WHERE p.user.id = :userId AND p.deletedAt IS NULL")
+    Page<Playlist> findActiveByUserIdPaginated(@Param("userId") UUID userId, Pageable pageable);
+
     // Find all active playlists
     @Query("SELECT p FROM Playlist p WHERE p.deletedAt IS NULL")
     List<Playlist> findAllActive();
+
+    // Find all active playlists (paginated)
+    @Query("SELECT p FROM Playlist p WHERE p.deletedAt IS NULL")
+    Page<Playlist> findAllActive(Pageable pageable);
 
     // Find active playlist by ID
     @Query("SELECT p FROM Playlist p WHERE p.id = :id AND p.deletedAt IS NULL")

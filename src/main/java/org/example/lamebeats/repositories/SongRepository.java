@@ -2,7 +2,9 @@ package org.example.lamebeats.repositories;
 
 import org.example.lamebeats.models.Album;
 import org.example.lamebeats.models.Artist;
+import org.example.lamebeats.models.Playlist;
 import org.example.lamebeats.models.Song;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -34,6 +36,10 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
     // Find all active songs
     @Query("SELECT s FROM Song s WHERE s.deletedAt IS NULL")
     List<Song> findAllActive();
+
+    // Find all active songs (paginated)
+    @Query("SELECT s FROM Song s WHERE s.deletedAt IS NULL")
+    Page<Song> findAllActive(Pageable pageable);
 
     // Find active by id
     @Query("SELECT s FROM Song s WHERE s.id = :id AND s.deletedAt IS NULL")
