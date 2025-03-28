@@ -1,5 +1,6 @@
 package org.example.lamebeats.repositories;
 
+import org.example.lamebeats.enums.Language;
 import org.example.lamebeats.models.Lyrics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -21,11 +22,11 @@ public interface LyricsRepository extends JpaRepository<Lyrics, UUID> {
     List<Lyrics> findActiveBySongId(@Param("songId") UUID songId);
 
     // Find lyrics by song id and language
-    Optional<Lyrics> findBySongIdAndLanguage(UUID songId, Lyrics.Language language);
+    Optional<Lyrics> findBySongIdAndLanguage(UUID songId, Language language);
 
     // Find active lyrics by song id and language
     @Query("SELECT l FROM Lyrics l WHERE l.song.id = :songId AND l.language = :language AND l.deletedAt IS NULL")
-    Optional<Lyrics> findActiveBySongIdAndLanguage(@Param("songId") UUID songId, @Param("language") Lyrics.Language language);
+    Optional<Lyrics> findActiveBySongIdAndLanguage(@Param("songId") UUID songId, @Param("language") Language language);
 
     // Find all active lyrics
     @Query("SELECT l FROM Lyrics l WHERE l.deletedAt IS NULL")
@@ -36,21 +37,21 @@ public interface LyricsRepository extends JpaRepository<Lyrics, UUID> {
     Optional<Lyrics> findActiveById(@Param("id") UUID id);
 
     // Find all lyrics by language
-    List<Lyrics> findByLanguage(Lyrics.Language language);
+    List<Lyrics> findByLanguage(Language language);
 
     // Find active lyrics by language
     @Query("SELECT l FROM Lyrics l WHERE l.language = :language AND l.deletedAt IS NULL")
-    List<Lyrics> findActiveByLanguage(@Param("language") Lyrics.Language language);
+    List<Lyrics> findActiveByLanguage(@Param("language") Language language);
 
     // Check if lyrics exist for a song
     boolean existsBySongId(UUID songId);
 
     // Check if lyrics exist for a song in a specific language
-    boolean existsBySongIdAndLanguage(UUID songId, Lyrics.Language language);
+    boolean existsBySongIdAndLanguage(UUID songId, Language language);
 
     // Check if active lyrics exist for a song in a specific language
     @Query("SELECT COUNT(l) > 0 FROM Lyrics l WHERE l.song.id = :songId AND l.language = :language AND l.deletedAt IS NULL")
-    boolean existsActiveBySongIdAndLanguage(@Param("songId") UUID songId, @Param("language") Lyrics.Language language);
+    boolean existsActiveBySongIdAndLanguage(@Param("songId") UUID songId, @Param("language") Language language);
 
     // Find all deleted lyrics
     @Query("SELECT l FROM Lyrics l WHERE l.deletedAt IS NOT NULL")

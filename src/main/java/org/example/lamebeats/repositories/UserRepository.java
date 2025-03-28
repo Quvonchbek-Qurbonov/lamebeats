@@ -2,6 +2,8 @@ package org.example.lamebeats.repositories;
 
 import org.example.lamebeats.enums.UserType;
 import org.example.lamebeats.models.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +23,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     // Find active users (not deleted)
     @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
     List<User> findAllActive();
+
+    // Find paginated active users
+    @Query("SELECT u FROM User u WHERE u.deletedAt IS NULL")
+    Page<User> findAllActive(Pageable pageable);
+
 
     // Find by username and not deleted
     @Query("SELECT u FROM User u WHERE LOWER(u.username) = LOWER(:username) AND u.deletedAt IS NULL")
