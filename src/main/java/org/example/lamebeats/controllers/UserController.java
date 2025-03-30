@@ -1,10 +1,15 @@
 package org.example.lamebeats.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.example.lamebeats.dto.LoginRequest;
+import org.example.lamebeats.dto.LoginResponse;
 import org.example.lamebeats.models.User;
+import org.example.lamebeats.services.AuthService;
 import org.example.lamebeats.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,10 +21,12 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final AuthService authService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuthService authService) {
         this.userService = userService;
+        this.authService = authService;
     }
 
     @GetMapping
@@ -50,7 +57,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("error", "Email is already registered"));
         }
 
-        User createdUser = userService.createUser(user);
+        User createdUser = userService.registerUser(user.getUsername(), user.getEmail(), user.getPassword(), user.getPhoto());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
@@ -87,15 +94,6 @@ public class UserController {
         return ResponseEntity.notFound().build();
     }
 
-/* TODO implementing after auth sessions
-   @PostMapping("/{id}/restore")
-    public ResponseEntity<Void> restoreUser(@PathVariable UUID id) {
-        if (userService.restoreUser(id)) {
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.notFound().build();
-    }*/
-
     @PatchMapping("/{id}/password")
     public ResponseEntity<?> changePassword(
             @PathVariable UUID id,
@@ -111,5 +109,24 @@ public class UserController {
     @GetMapping("/search")
     public List<User> searchUsers(@RequestParam String username) {
         return userService.searchActiveUsersByUsername(username);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletRequest request) {
+        try {
+            // Get user-agent header
+            String userAgent = request.getHeader("User-Agent");
+
+            // Authenticate user and generate token
+            LoginResponse loginResponse = authService.login(loginRequest, userAgent);
+
+            return ResponseEntity.ok(loginResponse);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "An unexpected error occurred"));
+        }
     }
 }
