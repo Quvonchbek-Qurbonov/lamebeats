@@ -1,5 +1,7 @@
 package org.example.lamebeats.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,6 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Artist {
 
     @Id
@@ -41,9 +44,11 @@ public class Artist {
     private LocalDateTime deletedAt;
 
     @ManyToMany(mappedBy = "artists")
+    @JsonIgnore
     private Set<Album> albums = new HashSet<>();
 
     @ManyToMany(mappedBy = "artists")
+    @JsonIgnore
     private Set<Song> songs = new HashSet<>();
 
     @ManyToMany
@@ -52,6 +57,7 @@ public class Artist {
             joinColumns = @JoinColumn(name = "artist_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id")
     )
+    @JsonIgnoreProperties({"artists", "hibernateLazyInitializer", "handler"})
     private Set<Genre> genres = new HashSet<>();
 
     public void softDelete() {
