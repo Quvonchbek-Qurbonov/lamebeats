@@ -60,6 +60,10 @@ public class User {
     @JsonIgnore
     private Set<Playlist> playlists;
 
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private Set<RecentTrack> recentTracks;
+
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();
     }
