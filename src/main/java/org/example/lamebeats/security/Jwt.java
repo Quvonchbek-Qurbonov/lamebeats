@@ -1,6 +1,7 @@
 package org.example.lamebeats.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -23,7 +24,7 @@ public class Jwt {
     @Value("${jwt.secret:defaultSecretThatShouldBeOverriddenInProduction}")
     private String secret;
 
-    @Value("${jwt.expiration:3600}")
+    @Value("${jwt.expiration:86400}")
     private long expirationTime;
 
     // Generate token for user
@@ -37,9 +38,17 @@ public class Jwt {
     }
 
     // Validate token
-    public boolean validateToken(String token, User user) {
-        final UUID userId = extractUserId(token);
-        return (userId.equals(user.getId()) && !isTokenExpired(token));
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
+            return true;
+        } catch (ExpiredJwtException e) {
+            // Token expired
+            return false;
+        } catch (Exception e) {
+            // Invalid token
+            return false;
+        }
     }
 
     // Extract user ID from token
@@ -50,6 +59,11 @@ public class Jwt {
     // Extract username from token
     public String extractUsername(String token) {
         return extractClaim(token, claims -> claims.get("username", String.class));
+    }
+
+    // Extract user type from token
+    public String extractUserType(String token) {
+        return extractClaim(token, claims -> claims.get("userType", String.class));
     }
 
     // Extract token expiration date
@@ -80,12 +94,6 @@ public class Jwt {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-    }
-
-    // Check if token is expired
-    private Boolean isTokenExpired(String token) {
-        final Date expiration = extractExpiration(token);
-        return expiration.before(new Date());
     }
 
     // Create token
