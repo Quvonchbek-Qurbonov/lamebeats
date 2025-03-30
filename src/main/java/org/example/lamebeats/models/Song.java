@@ -1,5 +1,9 @@
 package org.example.lamebeats.models;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -17,6 +21,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Song {
 
     @Id
@@ -28,6 +33,8 @@ public class Song {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "album_id")
+    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+    @JsonIgnoreProperties({"songs", "hibernateLazyInitializer", "handler"})
     private Album album;
 
     @Column(nullable = false)
@@ -57,15 +64,19 @@ public class Song {
             inverseJoinColumns = @JoinColumn(name = "artist_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"song_id", "artist_id"})
     )
+    @JsonIgnoreProperties({"songs", "hibernateLazyInitializer", "handler"})
     private Set<Artist> artists = new HashSet<>();
 
     @ManyToMany(mappedBy = "songs")
+    @JsonIgnore
     private Set<Playlist> playlists = new HashSet<>();
 
     @OneToMany(mappedBy = "song")
+    @JsonIgnore
     private Set<RecentTrack> recentTracks = new HashSet<>();
 
     @OneToMany(mappedBy = "song")
+    @JsonIgnore
     private Set<Lyrics> lyrics = new HashSet<>();
 
     public void softDelete() {

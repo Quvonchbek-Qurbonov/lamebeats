@@ -1,5 +1,6 @@
 package org.example.lamebeats.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @IdClass(PlaylistSongId.class)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class PlaylistSong {
 
     @Id
@@ -39,10 +41,12 @@ public class PlaylistSong {
 
     @ManyToOne
     @JoinColumn(name = "playlist_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"songs", "user", "hibernateLazyInitializer", "handler"})
     private Playlist playlist;
 
     @ManyToOne
     @JoinColumn(name = "song_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"playlists", "artists", "album", "recentTracks", "lyrics", "hibernateLazyInitializer", "handler"})
     private Song song;
 
     public void softDelete() {

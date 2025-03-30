@@ -1,5 +1,6 @@
 package org.example.lamebeats.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @IdClass(AlbumArtistId.class)
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AlbumArtist {
 
     @Id
@@ -36,9 +38,11 @@ public class AlbumArtist {
 
     @ManyToOne
     @JoinColumn(name = "album_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"artists", "songs", "hibernateLazyInitializer", "handler"})
     private Album album;
 
     @ManyToOne
     @JoinColumn(name = "artist_id", insertable = false, updatable = false)
+    @JsonIgnoreProperties({"albums", "songs", "genres", "hibernateLazyInitializer", "handler"})
     private Artist artist;
 }

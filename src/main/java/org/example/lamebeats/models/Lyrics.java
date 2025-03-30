@@ -1,5 +1,6 @@
 package org.example.lamebeats.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Lyrics {
 
     @Id
@@ -26,6 +28,7 @@ public class Lyrics {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "song_id", nullable = false)
+    @JsonIgnoreProperties({"lyrics", "artists", "playlists", "recentTracks", "hibernateLazyInitializer", "handler"})
     private Song song;
 
     @Type(JsonBinaryType.class)
