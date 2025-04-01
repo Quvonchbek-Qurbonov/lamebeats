@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Component
@@ -40,7 +41,7 @@ public class CurrentUser {
      */
     public static boolean isAdmin() {
         JwtUserDetails userDetails = getCurrentUserDetails();
-        return UserType.ADMIN.equals(userDetails.getUserType());
+        return Objects.equals(UserType.ADMIN.toString(), userDetails.getUserType());
     }
 
     /**
