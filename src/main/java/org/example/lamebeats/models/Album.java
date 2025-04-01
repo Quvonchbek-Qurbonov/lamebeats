@@ -74,4 +74,6 @@ public class Album {
     public void restore() {
         this.deletedAt = null;
     }
+
+
 }
