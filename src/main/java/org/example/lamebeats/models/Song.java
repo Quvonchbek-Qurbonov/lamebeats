@@ -40,9 +40,6 @@ public class Song {
     @Column(nullable = false)
     private Integer duration;
 
-    @Column(length = 50)
-    private String genre;
-
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
 

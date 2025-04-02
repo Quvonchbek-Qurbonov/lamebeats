@@ -173,31 +173,6 @@ public class PlaylistController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deletePlaylist(@PathVariable String id) {
-        UUID playlistId;
-        try {
-            playlistId = UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid playlist ID format"));
-        }
-
-        // Check if user owns this playlist
-        UUID currentUserId = CurrentUser.getCurrentUserId();
-        if (!playlistService.isPlaylistOwnedByUser(playlistId, currentUserId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "You don't have permission to delete this playlist"));
-        }
-
-        boolean deleted = playlistService.softDeletePlaylist(playlistId);
-
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
     @PostMapping("/{id}/songs")
     public ResponseEntity<?> addSongToPlaylist(@PathVariable String id, @RequestBody Map<String, String> payload) {
         UUID playlistId;
@@ -254,11 +229,9 @@ public class PlaylistController {
         }
 
         return playlistService.removeSongFromPlaylist(playlistId, songUUID)
-                .map(playlist -> {
-                    PlaylistDto dto = PlaylistDto.fromEntity(playlist);
-                    return ResponseEntity.ok(dto);
-                })
-                .orElse(ResponseEntity.notFound().build());
+                .map(playlist -> ResponseEntity.noContent().build())
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Playlist or song not found")));
     }
 
     @PostMapping("/{id}/songs/bulk")
@@ -370,23 +343,6 @@ public class PlaylistController {
         }
 
         List<Playlist> playlists = playlistService.searchActivePlaylistsByName(name);
-        List<PlaylistDto> playlistDtos = playlists.stream()
-                .map(PlaylistDto::fromEntity)
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(Map.of("data", playlistDtos));
-    }
-
-    @GetMapping("/song/{songId}")
-    public ResponseEntity<?> getPlaylistsWithSong(@PathVariable String songId) {
-        UUID songUUID;
-        try {
-            songUUID = UUID.fromString(songId);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Invalid song ID format"));
-        }
-
-        List<Playlist> playlists = playlistService.getPlaylistsContainingSong(songUUID);
         List<PlaylistDto> playlistDtos = playlists.stream()
                 .map(PlaylistDto::fromEntity)
                 .collect(Collectors.toList());
