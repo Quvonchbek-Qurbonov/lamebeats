@@ -313,4 +313,11 @@ public class GenreService {
         return genreRepository.findActiveByTitle(title)
                 .orElseGet(() -> createGenre(title));
     }
+
+    /**
+     * Check if genre exists by ID
+     */
+    public boolean genreExists(UUID genreId) {
+        return genreRepository.existsById(genreId);
+    }
 }

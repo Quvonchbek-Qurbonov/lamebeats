@@ -14,7 +14,6 @@ public class SongDto {
     private UUID albumId;
     private String albumTitle;
     private Integer duration;
-    private String genre;
     private String fileUrl;
     private Set<ArtistDto> artists;
     private LocalDateTime createdAt;
@@ -33,7 +32,6 @@ public class SongDto {
         }
 
         dto.setDuration(song.getDuration());
-        dto.setGenre(song.getGenre());
         dto.setFileUrl(song.getFileUrl());
         dto.setCreatedAt(song.getCreatedAt());
         dto.setUpdatedAt(song.getUpdatedAt());
@@ -61,7 +59,6 @@ public class SongDto {
         }
 
         dto.setDuration(song.getDuration());
-        dto.setGenre(song.getGenre());
         dto.setFileUrl(song.getFileUrl());
         dto.setCreatedAt(song.getCreatedAt());
         dto.setUpdatedAt(song.getUpdatedAt());
@@ -108,14 +105,6 @@ public class SongDto {
 
     public void setDuration(Integer duration) {
         this.duration = duration;
-    }
-
-    public String getGenre() {
-        return genre;
-    }
-
-    public void setGenre(String genre) {
-        this.genre = genre;
     }
 
     public String getFileUrl() {

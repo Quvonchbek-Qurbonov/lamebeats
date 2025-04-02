@@ -1,9 +1,12 @@
 package org.example.lamebeats.controllers;
 
 import org.example.lamebeats.dto.GenreDto;
+import org.example.lamebeats.dto.SongDto;
 import org.example.lamebeats.models.Genre;
 import org.example.lamebeats.models.Artist;
+import org.example.lamebeats.models.Song;
 import org.example.lamebeats.services.GenreService;
+import org.example.lamebeats.services.SongService;
 import org.example.lamebeats.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,11 +20,13 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/genres")
 public class GenreController {
     private final GenreService genreService;
+    private final SongService songService;
     private final CurrentUser currentUser;
 
     @Autowired
-    public GenreController(GenreService genreService, CurrentUser currentUser) {
+    public GenreController(GenreService genreService, SongService songService, CurrentUser currentUser) {
         this.genreService = genreService;
+        this.songService = songService;
         this.currentUser = currentUser;
     }
 
@@ -90,6 +95,38 @@ public class GenreController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(Map.of("data", genreDtos));
+    }
+
+    @GetMapping("/{id}/songs")
+    public ResponseEntity<?> getSongsForGenre(
+            @PathVariable String id,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit) {
+
+        UUID genreId;
+        try {
+            genreId = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid genre ID format"));
+        }
+
+        // First check if genre exists
+        if (!genreService.genreExists(genreId)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Map<String, Object> response = songService.getSongsByGenreIdPaginated(genreId, page, limit);
+
+        // Convert entities to DTOs
+        List<Song> songs = (List<Song>) response.get("data");
+        List<SongDto> songDtos = songs.stream()
+                .map(SongDto::fromEntity)
+                .collect(Collectors.toList());
+
+        Map<String, Object> dtoResponse = new HashMap<>(response);
+        dtoResponse.put("data", songDtos);
+
+        return ResponseEntity.ok(dtoResponse);
     }
 
 
