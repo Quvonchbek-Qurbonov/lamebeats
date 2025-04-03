@@ -184,13 +184,14 @@ public class AlbumService {
      * Create a new album
      */
     @Transactional
-    public Album createAlbum(String title, LocalDate releaseDate, String photo, List<UUID> artistIds) {
+    public Album createAlbum(String title, LocalDate releaseDate, String photo, List<UUID> artistIds, String spotifyId) {
         Album album = new Album();
         album.setTitle(title);
         album.setReleaseDate(releaseDate);
         album.setPhoto(photo);
         album.setArtists(new HashSet<>());
         album.setSongs(new ArrayList<>());
+        album.setSpotifyId(spotifyId);
         
         Album savedAlbum = albumRepository.save(album);
         

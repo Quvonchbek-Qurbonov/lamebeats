@@ -201,6 +201,7 @@ public class SongController {
         }
         
         String fileUrl = payload.containsKey("fileUrl") ? payload.get("fileUrl").toString() : null;
+        String spotifyId = payload.containsKey("spotifyId") ? payload.get("spotifyId").toString() : null;
         
         // Parse album ID
         UUID albumId = null;
@@ -226,7 +227,7 @@ public class SongController {
         }
 
         try {
-            Song createdSong = songService.createSong(title, duration, fileUrl, albumId, artistIds);
+            Song createdSong = songService.createSong(title, duration, fileUrl, albumId, artistIds, spotifyId);
             SongDto dto = SongDto.fromEntity(createdSong);
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {

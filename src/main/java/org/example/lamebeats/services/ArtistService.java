@@ -155,7 +155,7 @@ public class ArtistService {
      * Create a new artist
      */
     @Transactional
-    public Artist createArtist(String name, String photo) {
+    public Artist createArtist(String name, String photo, String spotifyId) {
         // Check if artist with this name already exists
         Optional<Artist> existingArtist = artistRepository.findByNameIgnoreCase(name);
         if (existingArtist.isPresent()) {
@@ -165,6 +165,7 @@ public class ArtistService {
         Artist artist = new Artist();
         artist.setName(name);
         artist.setPhoto(photo);
+        artist.setSpotifyId(spotifyId);
         artist.setGenres(new HashSet<>());
         
         return artistRepository.save(artist);
@@ -367,9 +368,9 @@ public class ArtistService {
      * Get or create artist
      */
     @Transactional
-    public Artist getOrCreateArtist(String name, String photo) {
+    public Artist getOrCreateArtist(String name, String photo, String spotifyId) {
         return artistRepository.findByNameIgnoreCase(name)
-                .orElseGet(() -> createArtist(name, photo));
+                .orElseGet(() -> createArtist(name, photo, spotifyId));
     }
 
     public Artist findBySpotifyId(String spotifyId) {

@@ -127,6 +127,7 @@ public class ArtistController {
 
         String name = payload.get("name").toString();
         String photo = payload.containsKey("photo") ? payload.get("photo").toString() : null;
+        String spotifyId = payload.containsKey("spotifyId") ? payload.get("spotifyId").toString() : null;
 
         try {
             // Check if artist already exists
@@ -134,7 +135,7 @@ public class ArtistController {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Artist with this name already exists"));
             }
             
-            Artist createdArtist = artistService.createArtist(name, photo);
+            Artist createdArtist = artistService.createArtist(name, photo, spotifyId);
             
             // Handle genre IDs if provided
             if (payload.containsKey("genreIds") && payload.get("genreIds") instanceof List) {

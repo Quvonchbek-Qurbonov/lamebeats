@@ -12,6 +12,7 @@ public class ArtistDto {
     private UUID id;
     private String name;
     private String photo;
+    private String spotifyId;
     private Set<GenreDto> genres;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -25,6 +26,7 @@ public class ArtistDto {
         dto.setId(artist.getId());
         dto.setName(artist.getName());
         dto.setPhoto(artist.getPhoto());
+        dto.setSpotifyId(artist.getSpotifyId());
         dto.setCreatedAt(artist.getCreatedAt());
         dto.setUpdatedAt(artist.getUpdatedAt());
         dto.setDeletedAt(artist.getDeletedAt());
@@ -77,6 +79,14 @@ public class ArtistDto {
 
     public void setPhoto(String photo) {
         this.photo = photo;
+    }
+
+    public String getSpotifyId() {
+        return spotifyId;
+    }
+
+    public void setSpotifyId(String spotifyId) {
+        this.spotifyId = spotifyId;
     }
 
     public Set<GenreDto> getGenres() {

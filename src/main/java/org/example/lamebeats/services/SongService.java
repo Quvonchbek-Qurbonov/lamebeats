@@ -276,11 +276,12 @@ public class SongService {
      * Create a new song
      */
     @Transactional
-    public Song createSong(String title, Integer duration, String fileUrl, UUID albumId, List<UUID> artistIds) {
+    public Song createSong(String title, Integer duration, String fileUrl, UUID albumId, List<UUID> artistIds, String spotifyId) {
         Song song = new Song();
         song.setTitle(title);
         song.setDuration(duration);
         song.setFileUrl(fileUrl);
+        song.setSpotifyId(spotifyId);
 
         // Set album if provided
         if (albumId != null) {

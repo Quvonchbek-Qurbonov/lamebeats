@@ -15,6 +15,7 @@ public class SongDto {
     private String albumTitle;
     private Integer duration;
     private String fileUrl;
+    private String spotifyId;
     private Set<ArtistDto> artists;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -137,5 +138,13 @@ public class SongDto {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getSpotifyId() {
+        return spotifyId;
+    }
+
+    public void setSpotifyId(String spotifyId) {
+        this.spotifyId = spotifyId;
     }
 }

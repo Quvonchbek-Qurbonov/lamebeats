@@ -16,6 +16,7 @@ public class AlbumDto {
     private String title;
     private LocalDate releaseDate;
     private String photo;
+    private String spotifyId;
     private List<SongDto> songs;
     private Set<ArtistDto> artists;
     private LocalDateTime createdAt;
@@ -165,5 +166,13 @@ public class AlbumDto {
 
     public void setSongCount(int songCount) {
         this.songCount = songCount;
+    }
+
+    public String getSpotifyId() {
+        return spotifyId;
+    }
+
+    public void setSpotifyId(String spotifyId) {
+        this.spotifyId = spotifyId;
     }
 }

@@ -133,7 +133,8 @@ public class AlbumController {
         }
         
         String photo = payload.containsKey("photo") ? payload.get("photo").toString() : null;
-        
+        String spotifyId = payload.containsKey("spotifyId") ? payload.get("spotifyId").toString() : null;
+
         // Parse artist IDs
         List<UUID> artistIds = new ArrayList<>();
         if (payload.containsKey("artistIds") && payload.get("artistIds") instanceof List) {
@@ -148,7 +149,7 @@ public class AlbumController {
         }
 
         try {
-            Album createdAlbum = albumService.createAlbum(title, releaseDate, photo, artistIds);
+            Album createdAlbum = albumService.createAlbum(title, releaseDate, photo, artistIds,spotifyId);
             AlbumDto dto = AlbumDto.fromEntity(createdAlbum);
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
