@@ -1,9 +1,6 @@
 package org.example.lamebeats.services;
 
-import org.example.lamebeats.models.Artist;
-import org.example.lamebeats.models.Genre;
-import org.example.lamebeats.models.ArtistGenre;
-import org.example.lamebeats.models.ArtistGenreId;
+import org.example.lamebeats.models.*;
 import org.example.lamebeats.repositories.ArtistRepository;
 import org.example.lamebeats.repositories.GenreRepository;
 import org.example.lamebeats.repositories.ArtistGenreRepository;
@@ -373,5 +370,9 @@ public class ArtistService {
     public Artist getOrCreateArtist(String name, String photo) {
         return artistRepository.findByNameIgnoreCase(name)
                 .orElseGet(() -> createArtist(name, photo));
+    }
+
+    public Artist findBySpotifyId(String spotifyId) {
+        return artistRepository.findBySpotifyId(spotifyId);
     }
 }

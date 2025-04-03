@@ -66,4 +66,6 @@ public interface AlbumRepository extends JpaRepository<Album, UUID> {
     // Count songs in album
     @Query("SELECT COUNT(s) FROM Song s WHERE s.album.id = :albumId")
     long countSongsInAlbum(@Param("albumId") UUID albumId);
+
+    Album findBySpotifyId(String spotifyId);
 }

@@ -549,4 +549,8 @@ public class SongService {
 
         return response;
     }
+
+    public Song findBySpotifyId(String spotifyId) {
+        return songRepository.findBySpotifyId(spotifyId);
+    }
 }

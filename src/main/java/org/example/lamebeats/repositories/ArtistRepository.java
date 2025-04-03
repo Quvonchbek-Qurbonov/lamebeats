@@ -56,4 +56,6 @@ public interface ArtistRepository extends JpaRepository<Artist, UUID> {
     // Find all deleted artists
     @Query("SELECT a FROM Artist a WHERE a.deletedAt IS NOT NULL")
     List<Artist> findAllDeleted();
+
+    Artist findBySpotifyId(String spotifyId);
 }

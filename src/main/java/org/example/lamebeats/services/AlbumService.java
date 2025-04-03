@@ -158,7 +158,7 @@ public class AlbumService {
     public List<Album> getAllDeletedAlbums() {
         return albumRepository.findAllDeleted();
     }
-    
+
     /**
      * Count songs in album
      */
@@ -346,5 +346,9 @@ public class AlbumService {
             return true;
         }
         return false;
+    }
+
+    public Album findBySpotifyId(String spotifyId) {
+        return albumRepository.findBySpotifyId(spotifyId);
     }
 }
