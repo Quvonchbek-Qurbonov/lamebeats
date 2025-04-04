@@ -133,7 +133,8 @@ public class AlbumController {
         }
         
         String photo = payload.containsKey("photo") ? payload.get("photo").toString() : null;
-        
+        String spotifyId = payload.containsKey("spotifyId") ? payload.get("spotifyId").toString() : null;
+
         // Parse artist IDs
         List<UUID> artistIds = new ArrayList<>();
         if (payload.containsKey("artistIds") && payload.get("artistIds") instanceof List) {
@@ -148,7 +149,7 @@ public class AlbumController {
         }
 
         try {
-            Album createdAlbum = albumService.createAlbum(title, releaseDate, photo, artistIds);
+            Album createdAlbum = albumService.createAlbum(title, releaseDate, photo, artistIds,spotifyId);
             AlbumDto dto = AlbumDto.fromEntity(createdAlbum);
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
@@ -215,6 +216,34 @@ public class AlbumController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to update album: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAlbum(@PathVariable String id, @RequestParam(defaultValue = "false") boolean hard) {
+        // Only admins can delete artists
+        if (!CurrentUser.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Only Admins can delete artists"));
+        }
+
+        UUID albumId;
+        try {
+            albumId = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid album ID format"));
+        }
+
+        boolean deleted;
+        if (hard) {
+            deleted = albumService.hardDeleteAlbum(albumId);
+        } else {
+            deleted = albumService.softDeleteAlbum(albumId);
+        }
+
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
 

@@ -29,6 +29,9 @@ public class Album {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(unique = true)
+    private String spotifyId;
+
     @Column(nullable = false)
     private String title;
 
@@ -62,6 +65,14 @@ public class Album {
     )
     @JsonIgnoreProperties({"albums", "songs", "genres", "hibernateLazyInitializer", "handler"})
     private Set<Artist> artists = new HashSet<>();
+
+    public List<UUID> getArtistIds() {
+        List<UUID> artistIds = new ArrayList<>();
+        for (Artist artist : this.getArtists()) {
+            artistIds.add(artist.getId());
+        }
+        return artistIds;
+    }
 
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();

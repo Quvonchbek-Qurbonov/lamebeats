@@ -4,9 +4,11 @@ import org.example.lamebeats.models.Album;
 import org.example.lamebeats.models.Artist;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -66,4 +68,11 @@ public interface AlbumRepository extends JpaRepository<Album, UUID> {
     // Count songs in album
     @Query("SELECT COUNT(s) FROM Song s WHERE s.album.id = :albumId")
     long countSongsInAlbum(@Param("albumId") UUID albumId);
+
+    Album findBySpotifyId(String spotifyId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Album a WHERE a.id = :id")
+    void hardDeleteById(@Param("id") UUID id);
 }

@@ -26,6 +26,9 @@ public class Artist {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(unique = true)
+    private String spotifyId;
+
     @Column(nullable = false, length = 100)
     private String name;
 

@@ -129,4 +129,11 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
      */
     @Query("SELECT DISTINCT s FROM Song s LEFT JOIN FETCH s.artists WHERE s.id IN :ids")
     List<Song> findByIdInWithArtists(@Param("ids") List<UUID> ids);
+
+    Song findBySpotifyId(String spotifyId);
+
+    // Pagination methods with filters
+    Page<Song> findByAlbumIdAndDeletedAtIsNull(UUID albumId, Pageable pageable);
+    Page<Song> findByArtistsIdAndDeletedAtIsNull(UUID artistId, Pageable pageable);
+    Page<Song> findByAlbumIdAndArtistsIdAndDeletedAtIsNull(UUID albumId, UUID artistId, Pageable pageable);
 }

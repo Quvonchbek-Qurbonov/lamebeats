@@ -3,9 +3,11 @@ package org.example.lamebeats.repositories;
 import org.example.lamebeats.models.Artist;
 import org.example.lamebeats.models.Genre;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,4 +58,11 @@ public interface ArtistRepository extends JpaRepository<Artist, UUID> {
     // Find all deleted artists
     @Query("SELECT a FROM Artist a WHERE a.deletedAt IS NOT NULL")
     List<Artist> findAllDeleted();
+
+    Artist findBySpotifyId(String spotifyId);
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM Artist a WHERE a.id = :id")
+    void hardDeleteById(@Param("id") UUID id);
 }

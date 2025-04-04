@@ -28,6 +28,9 @@ public class Song {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = true, unique = true)
+    private String spotifyId;
+
     @Column(nullable = false)
     private String title;
 

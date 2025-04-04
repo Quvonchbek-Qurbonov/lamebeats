@@ -1,12 +1,7 @@
 package org.example.lamebeats.services;
 
-import org.example.lamebeats.models.Artist;
-import org.example.lamebeats.models.Genre;
-import org.example.lamebeats.models.ArtistGenre;
-import org.example.lamebeats.models.ArtistGenreId;
-import org.example.lamebeats.repositories.ArtistRepository;
-import org.example.lamebeats.repositories.GenreRepository;
-import org.example.lamebeats.repositories.ArtistGenreRepository;
+import org.example.lamebeats.models.*;
+import org.example.lamebeats.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,14 +20,20 @@ public class ArtistService {
     private final ArtistRepository artistRepository;
     private final GenreRepository genreRepository;
     private final ArtistGenreRepository artistGenreRepository;
+    private final AlbumRepository albumRepository;
+    private final SongRepository songRepository;
 
     @Autowired
-    public ArtistService(ArtistRepository artistRepository, 
-                       GenreRepository genreRepository,
-                       ArtistGenreRepository artistGenreRepository) {
+    public ArtistService(ArtistRepository artistRepository,
+                         GenreRepository genreRepository,
+                         ArtistGenreRepository artistGenreRepository,
+                         AlbumRepository albumRepository,
+                         SongRepository songRepository) {
         this.artistRepository = artistRepository;
         this.genreRepository = genreRepository;
         this.artistGenreRepository = artistGenreRepository;
+        this.albumRepository = albumRepository;
+        this.songRepository = songRepository;
     }
 
     /**
@@ -48,31 +49,31 @@ public class ArtistService {
     public List<Artist> getAllActiveArtists() {
         return artistRepository.findAllActive();
     }
-    
+
     /**
      * Get all active artists with pagination
      */
     public Map<String, Object> getAllActiveArtistsPaginated(int page, int limit) {
         int pageIndex = Math.max(page - 1, 0); // Convert to zero-based index
         Pageable pageable = PageRequest.of(pageIndex, limit, Sort.by("name").ascending());
-        
+
         List<Artist> artists = artistRepository.findAllActive();
-        
+
         // Manual pagination since repository doesn't have a paginated method
         int total = artists.size();
         int fromIndex = pageIndex * limit;
         int toIndex = Math.min(fromIndex + limit, total);
-        
-        List<Artist> pagedArtists = fromIndex < total ? 
+
+        List<Artist> pagedArtists = fromIndex < total ?
                 artists.subList(fromIndex, toIndex) : new ArrayList<>();
-        
+
         Map<String, Object> response = new HashMap<>();
         response.put("data", pagedArtists);
         response.put("page", page);
         response.put("limit", limit);
         response.put("pages", (int) Math.ceil((double) total / limit));
         response.put("total", total);
-        
+
         return response;
     }
 
@@ -82,70 +83,70 @@ public class ArtistService {
     public Optional<Artist> getArtistById(UUID id) {
         return artistRepository.findById(id);
     }
-    
+
     /**
      * Get active artist by ID
      */
     public Optional<Artist> getActiveArtistById(UUID id) {
         return artistRepository.findActiveById(id);
     }
-    
+
     /**
      * Get artist by name (exact match, case insensitive)
      */
     public Optional<Artist> getArtistByName(String name) {
         return artistRepository.findByNameIgnoreCase(name);
     }
-    
+
     /**
      * Search artists by name (partial match)
      */
     public List<Artist> searchArtistsByName(String name) {
         return artistRepository.findByNameContainingIgnoreCase(name);
     }
-    
+
     /**
      * Search active artists by name (partial match)
      */
     public List<Artist> searchActiveArtistsByName(String name) {
         return artistRepository.findActiveByNameContaining(name);
     }
-    
+
     /**
      * Get all deleted artists
      */
     public List<Artist> getAllDeletedArtists() {
         return artistRepository.findAllDeleted();
     }
-    
+
     /**
      * Get artists by genre
      */
     public List<Artist> getArtistsByGenre(Genre genre) {
         return artistRepository.findByGenre(genre);
     }
-    
+
     /**
      * Get active artists by genre
      */
     public List<Artist> getActiveArtistsByGenre(Genre genre) {
         return artistRepository.findActiveByGenre(genre);
     }
-    
+
     /**
      * Get artists by genre ID
      */
     public List<Artist> getArtistsByGenreId(UUID genreId) {
         return artistRepository.findByGenreId(genreId);
     }
-    
+
     /**
      * Get active artists by genre ID
      */
     public List<Artist> getActiveArtistsByGenreId(UUID genreId) {
         return artistRepository.findActiveByGenreId(genreId);
     }
-    
+
     /**
      * Get artists with the most songs
      */
@@ -158,21 +159,22 @@ public class ArtistService {
      * Create a new artist
      */
     @Transactional
-    public Artist createArtist(String name, String photo) {
+    public Artist createArtist(String name, String photo, String spotifyId) {
         // Check if artist with this name already exists
         Optional<Artist> existingArtist = artistRepository.findByNameIgnoreCase(name);
         if (existingArtist.isPresent()) {
             throw new IllegalStateException("Artist with name '" + name + "' already exists");
         }
-        
+
         Artist artist = new Artist();
         artist.setName(name);
         artist.setPhoto(photo);
+        artist.setSpotifyId(spotifyId);
         artist.setGenres(new HashSet<>());
-        
+
         return artistRepository.save(artist);
     }
-    
+
     /**
      * Update artist details
      */
@@ -187,15 +189,15 @@ public class ArtistService {
                 }
                 artist.setName(name);
             }
-            
+
             if (photo != null) {
                 artist.setPhoto(photo);
             }
-            
+
             return artistRepository.save(artist);
         });
     }
-    
+
     /**
      * Soft delete an artist
      */
@@ -207,7 +209,7 @@ public class ArtistService {
             return true;
         }).orElse(false);
     }
-    
+
     /**
      * Restore a soft-deleted artist
      */
@@ -221,19 +223,66 @@ public class ArtistService {
                     return true;
                 }).orElse(false);
     }
-    
+
     /**
-     * Hard delete an artist (use with caution)
+     * Hard delete an artist and all its relationships (use with caution)
      */
     @Transactional
     public boolean hardDeleteArtist(UUID artistId) {
         if (artistRepository.existsById(artistId)) {
-            artistRepository.deleteById(artistId);
-            return true;
+            // First, remove artist from all relationships
+            Optional<Artist> artistOpt = artistRepository.findById(artistId);
+            if (artistOpt.isPresent()) {
+                Artist artist = artistOpt.get();
+
+                // Clear genre relationships (we only remove the artist from genres, not delete genres)
+                for (Genre genre : new ArrayList<>(artist.getGenres())) {
+                    genre.getArtists().remove(artist);
+                    genreRepository.save(genre);
+                }
+                artist.getGenres().clear();
+
+                // Delete associated albums
+                for (Album albumData : new ArrayList<>(artist.getAlbums())) {
+                    Optional<Album> albumOpt = albumRepository.findById(albumData.getId());
+                    if (albumOpt.isPresent()) {
+                        Album album = albumOpt.get();
+
+                        // Clear artist relationships
+                        for (Artist albumArtist : new ArrayList<>(album.getArtists())) {
+                            albumArtist.getAlbums().remove(album);
+                        }
+                        album.getArtists().clear();
+
+                        // Delete associated songs directly with repository
+                        if (album.getSongs() != null) {
+                            for (Song song : new ArrayList<>(album.getSongs())) {
+                                song.setAlbum(null);
+
+                                for (Artist songArtist : new ArrayList<>(song.getArtists())) {
+                                    songArtist.getSongs().remove(song);
+                                    song.getArtists().remove(songArtist);
+                                }
+
+                                // Hard delete the song
+                                songRepository.deleteById(song.getId());
+                            }
+                            album.setSongs(new ArrayList<>());
+                        }
+
+                        // Delete the album
+                        albumRepository.hardDeleteById(album.getId());
+                    }
+                }
+
+                // Delete the artist
+                artistRepository.hardDeleteById(artistId);
+                return true;
+            }
         }
         return false;
     }
-    
+
     /**
      * Add a genre to an artist
      */
@@ -241,21 +290,21 @@ public class ArtistService {
     public Optional<Artist> addGenreToArtist(UUID artistId, UUID genreId) {
         Optional<Artist> artistOpt = artistRepository.findActiveById(artistId);
         Optional<Genre> genreOpt = genreRepository.findActiveById(genreId);
-        
+
         if (artistOpt.isPresent() && genreOpt.isPresent()) {
             Artist artist = artistOpt.get();
             Genre genre = genreOpt.get();
-            
+
             artist.getGenres().add(genre);
             genre.getArtists().add(artist);
-            
+
             genreRepository.save(genre);
             return Optional.of(artistRepository.save(artist));
         }
-        
+
         return Optional.empty();
     }
-    
+
     /**
      * Remove a genre from an artist
      */
@@ -263,94 +312,94 @@ public class ArtistService {
     public Optional<Artist> removeGenreFromArtist(UUID artistId, UUID genreId) {
         Optional<Artist> artistOpt = artistRepository.findActiveById(artistId);
         Optional<Genre> genreOpt = genreRepository.findById(genreId);
-        
+
         if (artistOpt.isPresent() && genreOpt.isPresent()) {
             Artist artist = artistOpt.get();
             Genre genre = genreOpt.get();
-            
+
             artist.getGenres().remove(genre);
             genre.getArtists().remove(artist);
-            
+
             genreRepository.save(genre);
             return Optional.of(artistRepository.save(artist));
         }
-        
+
         return Optional.empty();
     }
-    
+
     /**
      * Add multiple genres to an artist
      */
     @Transactional
     public Optional<Artist> addGenresToArtist(UUID artistId, List<UUID> genreIds) {
         Optional<Artist> artistOpt = artistRepository.findActiveById(artistId);
-        
+
         if (artistOpt.isPresent()) {
             Artist artist = artistOpt.get();
             List<Genre> genresToAdd = genreRepository.findAllById(genreIds);
-            
+
             for (Genre genre : genresToAdd) {
                 artist.getGenres().add(genre);
                 genre.getArtists().add(artist);
                 genreRepository.save(genre);
             }
-            
+
             return Optional.of(artistRepository.save(artist));
         }
-        
+
         return Optional.empty();
     }
-    
+
     /**
      * Set genres for an artist (replacing existing genres)
      */
     @Transactional
     public Optional<Artist> setGenresForArtist(UUID artistId, List<UUID> genreIds) {
         Optional<Artist> artistOpt = artistRepository.findActiveById(artistId);
-        
+
         if (artistOpt.isPresent()) {
             Artist artist = artistOpt.get();
-            
+
             // Remove artist from all current genres
             for (Genre genre : artist.getGenres()) {
                 genre.getArtists().remove(artist);
                 genreRepository.save(genre);
             }
-            
+
             // Clear current genres
             artist.getGenres().clear();
-            
+
             // Add new genres
             if (genreIds != null && !genreIds.isEmpty()) {
                 List<Genre> genresToAdd = genreRepository.findAllById(genreIds);
-                
+
                 for (Genre genre : genresToAdd) {
                     artist.getGenres().add(genre);
                     genre.getArtists().add(artist);
                     genreRepository.save(genre);
                 }
             }
-            
+
             return Optional.of(artistRepository.save(artist));
         }
-        
+
         return Optional.empty();
     }
-    
+
     /**
      * Get the number of artists associated with a genre
      */
     public long getArtistCountForGenre(UUID genreId) {
         return artistGenreRepository.countArtistsByGenreId(genreId);
     }
-    
+
     /**
      * Get the number of genres associated with an artist
      */
     public long getGenreCountForArtist(UUID artistId) {
         return artistGenreRepository.countGenresByArtistId(artistId);
     }
-    
+
     /**
      * Get the most popular genres (based on number of artists)
      */
@@ -358,20 +407,24 @@ public class ArtistService {
         Pageable pageable = PageRequest.of(0, limit);
         return artistGenreRepository.countArtistsByGenre(pageable);
     }
-    
+
     /**
      * Check if artist exists by name (case insensitive)
      */
     public boolean existsByName(String name) {
         return artistRepository.findByNameIgnoreCase(name).isPresent();
     }
-    
+
     /**
      * Get or create artist
      */
     @Transactional
-    public Artist getOrCreateArtist(String name, String photo) {
+    public Artist getOrCreateArtist(String name, String photo, String spotifyId) {
         return artistRepository.findByNameIgnoreCase(name)
-                .orElseGet(() -> createArtist(name, photo));
+                .orElseGet(() -> createArtist(name, photo, spotifyId));
+    }
+
+    public Artist findBySpotifyId(String spotifyId) {
+        return artistRepository.findBySpotifyId(spotifyId);
     }
 }
