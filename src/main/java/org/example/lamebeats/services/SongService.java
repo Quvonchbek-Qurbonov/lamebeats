@@ -1,5 +1,6 @@
 package org.example.lamebeats.services;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.example.lamebeats.models.Album;
 import org.example.lamebeats.models.Artist;
 import org.example.lamebeats.models.Song;
@@ -79,15 +80,31 @@ public class SongService {
      * Get all active songs with pagination
      */
     @Transactional(readOnly = true)
-    public Map<String, Object> getAllActiveSongsPaginated(int page, int limit) {
+    public Map<String, Object> getAllActiveSongsPaginated(int page, int limit, UUID albumId, UUID artistId) {
         int pageIndex = Math.max(page - 1, 0); // Convert to zero-based index
         Pageable pageable = PageRequest.of(pageIndex, limit, Sort.by("createdAt").descending());
 
-        Page<Song> songPage = songRepository.findAllActive(pageable);
+        Page<Song> songPage;
+
+        // Apply filters based on provided parameters
+        if (albumId != null && artistId != null) {
+            // Filter by both albumId and artistId
+            songPage = songRepository.findByAlbumIdAndArtistsIdAndDeletedAtIsNull(albumId, artistId, pageable);
+        } else if (albumId != null) {
+            // Filter by albumId only
+            songPage = songRepository.findByAlbumIdAndDeletedAtIsNull(albumId, pageable);
+        } else if (artistId != null) {
+            // Filter by artistId only
+            songPage = songRepository.findByArtistsIdAndDeletedAtIsNull(artistId, pageable);
+        } else {
+            // No filters
+            songPage = songRepository.findAllActive(pageable);
+        }
 
         // Load artists for all songs in the page
-        List<Song> songsWithArtists = songRepository.findByIdInWithArtists(
-                songPage.getContent().stream().map(Song::getId).collect(Collectors.toList()));
+        List<Song> songsWithArtists = !songPage.isEmpty() ?
+                songRepository.findByIdInWithArtists(songPage.getContent().stream().map(Song::getId).collect(Collectors.toList())) :
+                Collections.emptyList();
 
         // Create a map for quick lookup
         Map<UUID, Song> songMap = songsWithArtists.stream()
@@ -553,5 +570,35 @@ public class SongService {
 
     public Song findBySpotifyId(String spotifyId) {
         return songRepository.findBySpotifyId(spotifyId);
+    }
+
+    /**
+     * Bulk creation of songs
+     */
+    public List<Song> createBulkSongs(List<Song> songDetails) {
+        List<Song> songs = new ArrayList<>();
+
+        for (Song singleSong : songDetails) {
+            UUID albumId = singleSong.getAlbum().getId();
+            List<UUID> artistIds = singleSong.getArtists().stream()
+                    .map(Artist::getId)
+                    .collect(Collectors.toList());
+            Song song = new Song();
+            song.setTitle(singleSong.getTitle());
+            song.setDuration(singleSong.getDuration());
+            song.setFileUrl(singleSong.getFileUrl());
+
+            Album album = albumRepository.findById(albumId)
+                    .orElseThrow(() -> new EntityNotFoundException("Album not found with ID: " + albumId));
+            song.setAlbum(album);
+
+            List<Artist> artists = artistRepository.findAllById(artistIds);
+            song.setArtists(new HashSet<>(artists));
+            song.setSpotifyId(singleSong.getSpotifyId());
+
+            songs.add(song);
+        }
+
+        return songRepository.saveAll(songs);
     }
 }

@@ -131,4 +131,9 @@ public interface SongRepository extends JpaRepository<Song, UUID> {
     List<Song> findByIdInWithArtists(@Param("ids") List<UUID> ids);
 
     Song findBySpotifyId(String spotifyId);
+
+    // Pagination methods with filters
+    Page<Song> findByAlbumIdAndDeletedAtIsNull(UUID albumId, Pageable pageable);
+    Page<Song> findByArtistsIdAndDeletedAtIsNull(UUID artistId, Pageable pageable);
+    Page<Song> findByAlbumIdAndArtistsIdAndDeletedAtIsNull(UUID albumId, UUID artistId, Pageable pageable);
 }

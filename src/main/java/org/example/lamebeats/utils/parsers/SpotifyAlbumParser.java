@@ -2,11 +2,9 @@ package org.example.lamebeats.utils.parsers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SpotifyAlbumParser {
     // Album fields
@@ -22,37 +20,38 @@ public class SpotifyAlbumParser {
     private String releaseDatePrecision;
     private String label;
     private int popularity;
-    
+
     // External URLs and IDs
     private String spotifyUrl;
     private String upc;
-    
+
     // Images
     private List<Map<String, Object>> images;
-    
+
     // Artists
     private List<Map<String, Object>> artists;
-    
+
     // Tracks
     private List<Map<String, Object>> tracks;
     private int tracksTotal;
     private String tracksHref;
-    
+
     // Copyrights
     private List<Map<String, String>> copyrights;
-    
+
     // Genres
     private List<String> genres;
-    
+
     // Static ObjectMapper for JSON parsing
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    
+
     // Empty constructor
-    public SpotifyAlbumParser() {}
-    
+    public SpotifyAlbumParser() {
+    }
+
     /**
      * Static method to parse a Spotify album JSON response into a SpotifyAlbum object
-     * 
+     *
      * @param json The JSON string from Spotify API
      * @return SpotifyAlbum object populated with data from the JSON
      * @throws RuntimeException if parsing fails
@@ -61,7 +60,7 @@ public class SpotifyAlbumParser {
         try {
             SpotifyAlbumParser album = new SpotifyAlbumParser();
             JsonNode rootNode = objectMapper.readTree(json);
-            
+
             // Parse album basics
             album.id = rootNode.path("id").asText();
             album.name = rootNode.path("name").asText();
@@ -75,11 +74,11 @@ public class SpotifyAlbumParser {
             album.releaseDatePrecision = rootNode.path("release_date_precision").asText();
             album.label = rootNode.path("label").asText();
             album.popularity = rootNode.path("popularity").asInt();
-            
+
             // External URLs and IDs
             album.spotifyUrl = rootNode.path("external_urls").path("spotify").asText();
             album.upc = rootNode.path("external_ids").path("upc").asText();
-            
+
             // Parse images
             album.images = new ArrayList<>();
             JsonNode imagesNode = rootNode.path("images");
@@ -92,7 +91,7 @@ public class SpotifyAlbumParser {
                     album.images.add(image);
                 }
             }
-            
+
             // Parse artists
             album.artists = new ArrayList<>();
             JsonNode artistsNode = rootNode.path("artists");
@@ -104,21 +103,21 @@ public class SpotifyAlbumParser {
                     artist.put("uri", artistNode.path("uri").asText());
                     artist.put("href", artistNode.path("href").asText());
                     artist.put("type", artistNode.path("type").asText());
-                    
+
                     Map<String, String> artistExternalUrls = new HashMap<>();
                     artistExternalUrls.put("spotify", artistNode.path("external_urls").path("spotify").asText());
                     artist.put("external_urls", artistExternalUrls);
-                    
+
                     album.artists.add(artist);
                 }
             }
-            
+
             // Parse tracks
             album.tracks = new ArrayList<>();
             JsonNode tracksNode = rootNode.path("tracks");
             album.tracksHref = tracksNode.path("href").asText();
             album.tracksTotal = tracksNode.path("total").asInt();
-            
+
             JsonNode tracksItemsNode = tracksNode.path("items");
             if (tracksItemsNode.isArray()) {
                 for (JsonNode trackNode : tracksItemsNode) {
@@ -134,13 +133,13 @@ public class SpotifyAlbumParser {
                     track.put("explicit", trackNode.path("explicit").asBoolean());
                     track.put("is_playable", trackNode.path("is_playable").asBoolean());
                     track.put("is_local", trackNode.path("is_local").asBoolean());
-                    track.put("preview_url", trackNode.path("preview_url").isNull() ? 
-                                null : trackNode.path("preview_url").asText());
-                    
+                    track.put("preview_url", trackNode.path("preview_url").isNull() ?
+                            null : trackNode.path("preview_url").asText());
+
                     Map<String, String> trackExternalUrls = new HashMap<>();
                     trackExternalUrls.put("spotify", trackNode.path("external_urls").path("spotify").asText());
                     track.put("external_urls", trackExternalUrls);
-                    
+
                     // Track artists
                     List<Map<String, Object>> trackArtists = new ArrayList<>();
                     JsonNode trackArtistsNode = trackNode.path("artists");
@@ -152,20 +151,20 @@ public class SpotifyAlbumParser {
                             artist.put("uri", artistNode.path("uri").asText());
                             artist.put("href", artistNode.path("href").asText());
                             artist.put("type", artistNode.path("type").asText());
-                            
+
                             Map<String, String> artistExternalUrls = new HashMap<>();
                             artistExternalUrls.put("spotify", artistNode.path("external_urls").path("spotify").asText());
                             artist.put("external_urls", artistExternalUrls);
-                            
+
                             trackArtists.add(artist);
                         }
                     }
                     track.put("artists", trackArtists);
-                    
+
                     album.tracks.add(track);
                 }
             }
-            
+
             // Parse copyrights
             album.copyrights = new ArrayList<>();
             JsonNode copyrightsNode = rootNode.path("copyrights");
@@ -177,7 +176,7 @@ public class SpotifyAlbumParser {
                     album.copyrights.add(copyright);
                 }
             }
-            
+
             // Parse genres
             album.genres = new ArrayList<>();
             JsonNode genresNode = rootNode.path("genres");
@@ -186,7 +185,7 @@ public class SpotifyAlbumParser {
                     album.genres.add(genreNode.asText());
                 }
             }
-            
+
             return album;
         } catch (IOException e) {
             throw new RuntimeException("Failed to parse Spotify album JSON", e);
@@ -361,9 +360,17 @@ public class SpotifyAlbumParser {
     public void setGenres(List<String> genres) {
         this.genres = genres;
     }
-    
+
     // Convenience methods
-    
+
+    public List<String> getArtistIds() {
+        List<String> artistIds = new ArrayList<>();
+        for (Map<String, Object> artist : artists) {
+            artistIds.add((String) artist.get("id"));
+        }
+        return artistIds;
+    }
+
     /**
      * Get album cover image URL (largest available)
      */
@@ -373,7 +380,7 @@ public class SpotifyAlbumParser {
         }
         return null;
     }
-    
+
     /**
      * Get thumbnail image URL (smallest available)
      */
@@ -383,7 +390,7 @@ public class SpotifyAlbumParser {
         }
         return null;
     }
-    
+
     /**
      * Get primary artist name
      */
@@ -393,7 +400,7 @@ public class SpotifyAlbumParser {
         }
         return null;
     }
-    
+
     /**
      * Get all artist names as a comma-separated string
      */
@@ -401,7 +408,7 @@ public class SpotifyAlbumParser {
         if (artists == null || artists.isEmpty()) {
             return "";
         }
-        
+
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < artists.size(); i++) {
             if (i > 0) {

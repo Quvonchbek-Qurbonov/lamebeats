@@ -27,9 +27,30 @@ public class SongController {
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllSongs(
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(required = false) String albumId,
+            @RequestParam(required = false) String artistId) {
 
-        Map<String, Object> response = songService.getAllActiveSongsPaginated(page, limit);
+        UUID albumUUID = null;
+        UUID artistUUID = null;
+
+        if (albumId != null && !albumId.isEmpty()) {
+            try {
+                albumUUID = UUID.fromString(albumId);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid album ID format"));
+            }
+        }
+
+        if (artistId != null && !artistId.isEmpty()) {
+            try {
+                artistUUID = UUID.fromString(artistId);
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid artist ID format"));
+            }
+        }
+
+        Map<String, Object> response = songService.getAllActiveSongsPaginated(page, limit, albumUUID, artistUUID);
 
         // Convert entities to DTOs
         List<Song> songs = (List<Song>) response.get("data");

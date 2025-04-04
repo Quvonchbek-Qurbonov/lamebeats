@@ -9,10 +9,7 @@ import org.example.lamebeats.services.SongService;
 import org.example.lamebeats.services.SpotifyService;
 import org.example.lamebeats.utils.CurrentUser;
 import org.example.lamebeats.utils.SpotifySearch;
-import org.example.lamebeats.utils.parsers.SpotifyAlbumParser;
-import org.example.lamebeats.utils.parsers.SpotifyArtistParser;
-import org.example.lamebeats.utils.parsers.SpotifySearchParser;
-import org.example.lamebeats.utils.parsers.SpotifyTrackParser;
+import org.example.lamebeats.utils.parsers.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -185,6 +182,101 @@ public class SpotifyController {
 
         return ResponseEntity.status(200).body(Map.of("data", newSong));
     }
+
+    @PostMapping("add-album/{spotifyId}")
+    public ResponseEntity<Map<String, Object>> addAllAlbumTracks(@PathVariable String spotifyId) {
+        if (!CurrentUser.isAdmin()) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only Admins can access this endpoint"));
+        }
+
+        if (spotifyId.isEmpty()) {
+            return ResponseEntity.status(400).body(Map.of("error", "ID parameter cannot be empty"));
+        }
+
+        SpotifyAlbumParser albumSpotify = spotifyService.getAlbumByIdFromSpotify(spotifyId);
+
+        SpotifyAlbumTracks albumTracks = spotifyService.getAlbumTracks(spotifyId);
+        if (albumTracks == null) {
+            return ResponseEntity.status(404).body(Map.of("error", "Album tracks not found"));
+        }
+
+        // Check if the album already exists in the database
+        Album existingAlbum = albumService.findBySpotifyId(spotifyId);
+        if (existingAlbum == null) {
+            List<UUID> artistIds = new ArrayList<>();
+            for (String artistId : albumSpotify.getArtistIds()) {
+                Artist artist = artistService.findBySpotifyId(artistId);
+                if (artist == null) {
+                    // Retrieve and create new artist if not found
+                    SpotifyArtistParser artistSpotify = spotifyService.getArtistByIdFromSpotify(artistId);
+
+                    String imageUrl = artistSpotify.getImages().isEmpty() ? null : artistSpotify.getImages().get(0).get("url").toString();
+
+                    artist = artistService.createArtist(artistSpotify.getName(), imageUrl, artistId);
+                }
+                artistIds.add(artist.getId());
+            }
+
+            Album newAlbum = albumService.createAlbum(albumSpotify.getName(), LocalDate.parse(albumSpotify.getReleaseDate()),
+                    albumSpotify.getImages().isEmpty() ? null : albumSpotify.getImages().get(0).get("url").toString(),
+                    artistIds, spotifyId);
+            existingAlbum = newAlbum;
+        }
+
+        // Only add songs that don't exist yet
+        List<Song> newSongs = new ArrayList<>();
+        List<Song> allSongs = new ArrayList<>();
+
+        for (SpotifyAlbumTracks.TrackItem singleSong : albumTracks.getTracks()) {
+            Song existingSong = songService.findBySpotifyId(singleSong.getId());
+
+            if (existingSong == null) {
+                Song newSong = new Song();
+                newSong.setId(UUID.randomUUID());
+                newSong.setTitle(singleSong.getName());
+                newSong.setDuration((int) (singleSong.getDurationMs() / 1000));
+                newSong.setSpotifyId(singleSong.getId());
+                newSong.setAlbum(existingAlbum);
+
+                List<String> trackPreviewUrls = spotifyService.getTrackPreviewUrls(singleSong.getId());
+                newSong.setFileUrl(trackPreviewUrls.getFirst().toString());
+
+                Set<Artist> artists = new HashSet<>();
+                for (SpotifyAlbumTracks.ArtistItem artist : singleSong.getArtists()) {
+                    Artist existingArtist = artistService.findBySpotifyId(artist.getId());
+                    if (existingArtist == null) {
+                        // Retrieve and create new artist if not found
+                        SpotifyArtistParser artistSpotify = spotifyService.getArtistByIdFromSpotify(artist.getId());
+
+                        String imageUrl = artistSpotify.getImages().isEmpty() ? null : artistSpotify.getImages().get(0).get("url").toString();
+
+                        existingArtist = artistService.createArtist(artistSpotify.getName(), imageUrl, artistSpotify.getId());
+                    }
+                    artists.add(existingArtist);
+                }
+                newSong.setArtists(artists);
+
+                // Only add new songs to the list for bulk creation
+                newSongs.add(newSong);
+            }
+
+            // Keep track of all songs for the response
+            allSongs.add(existingSong != null ? existingSong : newSongs.get(newSongs.size() - 1));
+        }
+
+        // Only create songs that don't exist yet
+        List<Song> createdSongs = newSongs.isEmpty() ?
+                new ArrayList<>() :
+                songService.createBulkSongs(newSongs);
+
+        // Return all songs (both existing and newly created)
+        return ResponseEntity.status(200).body(Map.of(
+                "songsCount", allSongs.size(),
+                "newSongsCount", createdSongs.size(),
+                "songs", allSongs
+        ));
+    }
+
 
     /**
      * Map Spotify tracks to SongDto objects

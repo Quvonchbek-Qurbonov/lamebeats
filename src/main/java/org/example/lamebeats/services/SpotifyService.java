@@ -286,6 +286,28 @@ public class SpotifyService {
         }
     }
 
+    public SpotifyAlbumTracks getAlbumTracks(String albumId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + getAccessToken());
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String url = spotifyApiProperties.getBaseUrl() + spotifyApiProperties.getResources().getAlbums() + "/" + albumId + "/tracks?market=UZ";
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return SpotifyAlbumTracks.parseAlbumTracks(response.getBody());
+        } else {
+            throw new RuntimeException("Failed to retrieve tracks for album with ID: " + albumId);
+        }
+    }
+
     public List<String> getTrackPreviewUrls(String trackId) {
         try {
             return previewFinder.getPreviewUrls(trackId);
