@@ -6,4 +6,5 @@ public enum Language {
     UZ,
     CH,
     ES,
+    UNKNOWN
 }
