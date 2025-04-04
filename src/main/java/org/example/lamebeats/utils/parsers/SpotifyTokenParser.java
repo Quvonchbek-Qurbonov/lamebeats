@@ -1,6 +1,6 @@
 package org.example.lamebeats.utils.parsers;
 
-public class SpotifyParsers {
+public class SpotifyTokenParser {
     /**
      * Class to deserialize the Spotify token response
      */

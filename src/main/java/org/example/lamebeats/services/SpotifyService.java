@@ -2,8 +2,8 @@ package org.example.lamebeats.services;
 
 import jakarta.annotation.PostConstruct;
 import org.example.lamebeats.utils.SpotifyApiProperties;
-import org.example.lamebeats.utils.parsers.SpotifyParsers;
-import org.example.lamebeats.utils.parsers.SpotifySearchParser;
+import org.example.lamebeats.utils.SpotifyPreviewFinder;
+import org.example.lamebeats.utils.parsers.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class SpotifyService {
@@ -27,12 +29,15 @@ public class SpotifyService {
 
     private final RestTemplate restTemplate;
     private final SpotifyApiProperties spotifyApiProperties;
+    private final SpotifyPreviewFinder previewFinder;
+
     private String accessToken;
     private long tokenExpirationTime;
 
     public SpotifyService(SpotifyApiProperties spotifyApiProperties) {
         this.restTemplate = new RestTemplate();
         this.spotifyApiProperties = spotifyApiProperties;
+        this.previewFinder = new SpotifyPreviewFinder(clientId, clientSecret);
     }
 
     /**
@@ -49,7 +54,7 @@ public class SpotifyService {
     @Scheduled(fixedRate = 58 * 60 * 1000) // 58 minutes in milliseconds
     public void refreshAccessToken() {
         try {
-            SpotifyParsers.SpotifyTokenResponse tokenResponse = fetchTokenFromSpotify();
+            SpotifyTokenParser.SpotifyTokenResponse tokenResponse = fetchTokenFromSpotify();
             if (tokenResponse != null) {
                 this.accessToken = tokenResponse.getAccessToken();
                 this.tokenExpirationTime = System.currentTimeMillis() + (tokenResponse.getExpiresIn() * 1000);
@@ -92,7 +97,7 @@ public class SpotifyService {
      * Fetch a new token from Spotify API
      * @return SpotifyTokenResponse object or null if the request fails
      */
-    private SpotifyParsers.SpotifyTokenResponse fetchTokenFromSpotify() {
+    private SpotifyTokenParser.SpotifyTokenResponse fetchTokenFromSpotify() {
         try {
             // Create request headers with Basic auth
             HttpHeaders headers = new HttpHeaders();
@@ -124,9 +129,9 @@ public class SpotifyService {
                 // Create a new RestTemplate for the actual object mapping
                 RestTemplate objectMapper = new RestTemplate();
                 try {
-                    SpotifyParsers.SpotifyTokenResponse tokenResponse = objectMapper.getForObject(
+                    SpotifyTokenParser.SpotifyTokenResponse tokenResponse = objectMapper.getForObject(
                             "data:" + MediaType.APPLICATION_JSON_VALUE + "," + rawResponse.getBody(),
-                            SpotifyParsers.SpotifyTokenResponse.class
+                            SpotifyTokenParser.SpotifyTokenResponse.class
                     );
 
                     // Manually debug the response
@@ -153,7 +158,7 @@ public class SpotifyService {
                             int endIndex = responseBody.indexOf("\"", startIndex);
                             String extractedToken = responseBody.substring(startIndex, endIndex);
 
-                            SpotifyParsers.SpotifyTokenResponse manualResponse = new SpotifyParsers.SpotifyTokenResponse();
+                            SpotifyTokenParser.SpotifyTokenResponse manualResponse = new SpotifyTokenParser.SpotifyTokenResponse();
                             manualResponse.setAccessToken(extractedToken);
                             manualResponse.setTokenType("Bearer");
                             manualResponse.setExpiresIn(3600);
@@ -212,6 +217,80 @@ public class SpotifyService {
             System.err.println("Error during search: " + e.getMessage());
             e.printStackTrace();
             return new SpotifySearchParser.SearchResult();
+        }
+    }
+
+    public SpotifyTrackParser getTrackByIdFromSpotify(String trackId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + getAccessToken());
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String url = spotifyApiProperties.getBaseUrl() + spotifyApiProperties.getResources().getTracks() + "/" + trackId;
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return SpotifyTrackParser.parseTrack(response.getBody());
+        } else {
+            throw new RuntimeException("Failed to retrieve track with ID: " + trackId);
+        }
+    }
+
+    public SpotifyAlbumParser getAlbumByIdFromSpotify(String albumId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + getAccessToken());
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String url = spotifyApiProperties.getBaseUrl() + spotifyApiProperties.getResources().getAlbums() + "/" + albumId;
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return SpotifyAlbumParser.parseAlbum(response.getBody());
+        } else {
+            throw new RuntimeException("Failed to retrieve album with ID: " + albumId);
+        }
+    }
+
+    public SpotifyArtistParser getArtistByIdFromSpotify(String artistId) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", "Bearer " + getAccessToken());
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        String url = spotifyApiProperties.getBaseUrl() + spotifyApiProperties.getResources().getArtists() + "/" + artistId;
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                String.class
+        );
+
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return SpotifyArtistParser.parseArtist(response.getBody());
+        } else {
+            throw new RuntimeException("Failed to retrieve artist with ID: " + artistId);
+        }
+    }
+
+    public List<String> getTrackPreviewUrls(String trackId) {
+        try {
+            return previewFinder.getPreviewUrls(trackId);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to get preview URLs: " + e.getMessage(), e);
         }
     }
 }

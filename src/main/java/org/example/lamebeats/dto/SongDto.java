@@ -34,6 +34,7 @@ public class SongDto {
 
         dto.setDuration(song.getDuration());
         dto.setFileUrl(song.getFileUrl());
+        dto.setSpotifyId(song.getSpotifyId());
         dto.setCreatedAt(song.getCreatedAt());
         dto.setUpdatedAt(song.getUpdatedAt());
 

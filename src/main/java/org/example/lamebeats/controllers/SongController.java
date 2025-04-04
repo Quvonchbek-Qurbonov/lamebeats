@@ -387,4 +387,34 @@ public class SongController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteSong(@PathVariable String id, @RequestParam(defaultValue = "false") boolean hard) {
+        // Only admins can delete songs
+        if (!CurrentUser.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "Only Admins can delete songs"));
+        }
+
+        UUID songId;
+        try {
+            songId = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid song ID format"));
+        }
+
+        boolean deleted;
+        if (hard) {
+            deleted = songService.hardDeleteSong(songId);
+        } else {
+            deleted = songService.softDeleteSong(songId);
+        }
+
+        if (!deleted) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

@@ -9,17 +9,16 @@ import org.example.lamebeats.services.SongService;
 import org.example.lamebeats.services.SpotifyService;
 import org.example.lamebeats.utils.CurrentUser;
 import org.example.lamebeats.utils.SpotifySearch;
+import org.example.lamebeats.utils.parsers.SpotifyAlbumParser;
+import org.example.lamebeats.utils.parsers.SpotifyArtistParser;
 import org.example.lamebeats.utils.parsers.SpotifySearchParser;
+import org.example.lamebeats.utils.parsers.SpotifyTrackParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -133,6 +132,58 @@ public class SpotifyController {
         response.setPage(page);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("add-track/{spotifyId}")
+    public ResponseEntity<Map<String, Object>> addTrack(@PathVariable String spotifyId) {
+        if (!CurrentUser.isAdmin()) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only Admins can access this endpoint"));
+        }
+
+        if (spotifyId.isEmpty()) {
+            return ResponseEntity.status(400).body(Map.of("error", "ID parameter cannot be empty"));
+        }
+
+        Song existingSong = songService.findBySpotifyId(spotifyId);
+        if (existingSong != null) {
+            return ResponseEntity.status(409).body(Map.of("error", "Song already exists with id: " + existingSong.getId()));
+        }
+
+        // Fetch track details from Spotify
+        SpotifyTrackParser trackSpotify = spotifyService.getTrackByIdFromSpotify(spotifyId);
+
+        Album album = albumService.findBySpotifyId(trackSpotify.getAlbumId());
+        if (album == null) {
+            SpotifyAlbumParser spotifyAlbum = spotifyService.getAlbumByIdFromSpotify(trackSpotify.getAlbumId());
+
+            // checking for album artists
+            List<UUID> artistIds = new ArrayList<>();
+            for (String spotifyArtistId : trackSpotify.getArtistIds()) {
+                Artist artist = artistService.findBySpotifyId(spotifyArtistId);
+                if (artist == null) {
+                    // Retrieve and create new artist if not found
+                    SpotifyArtistParser artistSpotify = spotifyService.getArtistByIdFromSpotify(spotifyArtistId);
+
+                    String imageUrl = artistSpotify.getImages().isEmpty() ? null : artistSpotify.getImages().get(0).get("url").toString();
+
+                    artist = artistService.createArtist(artistSpotify.getName(), imageUrl, spotifyArtistId);
+                }
+                artistIds.add(artist.getId());
+            }
+
+            String imageUrl = spotifyAlbum.getImages().isEmpty() ? null : spotifyAlbum.getImages().get(0).get("url").toString();
+
+            album = albumService.createAlbum(spotifyAlbum.getName(), LocalDate.parse(spotifyAlbum.getReleaseDate()),
+                    imageUrl, artistIds,
+                    spotifyAlbum.getId());
+        }
+
+        List<String> trackPreviewUrls = spotifyService.getTrackPreviewUrls(spotifyId);
+
+        //TODO adding genre(s) to artist
+        Song newSong = songService.createSong(trackSpotify.getName(), (int) (trackSpotify.getDurationMs() / 1000), trackPreviewUrls.getFirst().toString(), album.getId(), album.getArtistIds(), trackSpotify.getId());
+
+        return ResponseEntity.status(200).body(Map.of("data", newSong));
     }
 
     /**

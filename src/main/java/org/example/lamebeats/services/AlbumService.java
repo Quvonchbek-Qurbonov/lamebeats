@@ -2,9 +2,11 @@ package org.example.lamebeats.services;
 
 import org.example.lamebeats.models.Album;
 import org.example.lamebeats.models.Artist;
+import org.example.lamebeats.models.Song;
 import org.example.lamebeats.repositories.AlbumRepository;
 import org.example.lamebeats.repositories.ArtistRepository;
 import org.example.lamebeats.repositories.AlbumArtistRepository;
+import org.example.lamebeats.repositories.SongRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,14 +25,17 @@ public class AlbumService {
     private final AlbumRepository albumRepository;
     private final ArtistRepository artistRepository;
     private final AlbumArtistRepository albumArtistRepository;
+    private final SongRepository songRepository;
 
     @Autowired
     public AlbumService(AlbumRepository albumRepository, 
                         ArtistRepository artistRepository,
-                        AlbumArtistRepository albumArtistRepository) {
+                        AlbumArtistRepository albumArtistRepository,
+                        SongRepository songRepository) {
         this.albumRepository = albumRepository;
         this.artistRepository = artistRepository;
         this.albumArtistRepository = albumArtistRepository;
+        this.songRepository = songRepository;
     }
 
     /**
@@ -336,15 +341,44 @@ public class AlbumService {
                     return true;
                 }).orElse(false);
     }
-    
+
     /**
-     * Hard delete an album (use with caution)
+     * Hard delete an album and all its relationships (use with caution)
      */
     @Transactional
     public boolean hardDeleteAlbum(UUID albumId) {
         if (albumRepository.existsById(albumId)) {
-            albumRepository.deleteById(albumId);
-            return true;
+            Optional<Album> albumOpt = albumRepository.findById(albumId);
+            if (albumOpt.isPresent()) {
+                Album album = albumOpt.get();
+
+                // Clear artist relationships
+                for (Artist artist : new ArrayList<>(album.getArtists())) {
+                    artist.getAlbums().remove(album);
+                    artistRepository.save(artist);
+                }
+                album.getArtists().clear();
+
+                // Delete associated songs directly with repository
+                if (album.getSongs() != null) {
+                    for (Song song : new ArrayList<>(album.getSongs())) {
+                        song.setAlbum(null);
+
+                        for (Artist artist : new ArrayList<>(song.getArtists())) {
+                            artist.getSongs().remove(song);
+                            song.getArtists().remove(artist);
+                        }
+
+                        // Hard delete the song
+                        songRepository.deleteById(song.getId());
+                    }
+                    album.setSongs(new ArrayList<>());
+                }
+
+                // Now delete the album using the hard delete method
+                albumRepository.hardDeleteById(albumId);
+                return true;
+            }
         }
         return false;
     }

@@ -219,6 +219,34 @@ public class AlbumController {
         }
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAlbum(@PathVariable String id, @RequestParam(defaultValue = "false") boolean hard) {
+        // Only admins can delete artists
+        if (!CurrentUser.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Only Admins can delete artists"));
+        }
+
+        UUID albumId;
+        try {
+            albumId = UUID.fromString(id);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid album ID format"));
+        }
+
+        boolean deleted;
+        if (hard) {
+            deleted = albumService.hardDeleteAlbum(albumId);
+        } else {
+            deleted = albumService.softDeleteAlbum(albumId);
+        }
+
+        if (deleted) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/{id}/artists")
     public ResponseEntity<?> addArtistsToAlbum(@PathVariable String id, @RequestBody Map<String, List<String>> payload) {
         // Only admins can modify album-artist relationships

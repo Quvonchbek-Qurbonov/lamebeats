@@ -134,9 +134,9 @@ public class ArtistController {
             if (artistService.existsByName(name)) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Artist with this name already exists"));
             }
-            
+
             Artist createdArtist = artistService.createArtist(name, photo, spotifyId);
-            
+
             // Handle genre IDs if provided
             if (payload.containsKey("genreIds") && payload.get("genreIds") instanceof List) {
                 try {
@@ -144,9 +144,9 @@ public class ArtistController {
                             .stream()
                             .map(id -> UUID.fromString(id.toString()))
                             .collect(Collectors.toList());
-                    
+
                     artistService.addGenresToArtist(createdArtist.getId(), genreIds);
-                    
+
                     // Reload artist to include genres
                     createdArtist = artistService.getArtistById(createdArtist.getId()).orElse(createdArtist);
                 } catch (Exception e) {
@@ -154,7 +154,7 @@ public class ArtistController {
                     System.err.println("Failed to associate genres: " + e.getMessage());
                 }
             }
-            
+
             ArtistDto dto = ArtistDto.fromEntity(createdArtist);
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
@@ -186,7 +186,7 @@ public class ArtistController {
 
         try {
             Optional<Artist> updatedArtistOpt = artistService.updateArtist(artistId, name, photo);
-            
+
             // If artist updated successfully and genres are provided, update genres
             if (updatedArtistOpt.isPresent() && payload.containsKey("genreIds") && payload.get("genreIds") instanceof List) {
                 try {
@@ -194,21 +194,21 @@ public class ArtistController {
                             .stream()
                             .map(gId -> UUID.fromString(gId.toString()))
                             .collect(Collectors.toList());
-                    
+
                     updatedArtistOpt = artistService.setGenresForArtist(artistId, genreIds);
                 } catch (Exception e) {
                     // Log but continue with the artist update
                     System.err.println("Failed to update genres: " + e.getMessage());
                 }
             }
-            
+
             return updatedArtistOpt
                     .map(artist -> {
                         ArtistDto dto = ArtistDto.fromEntity(artist);
                         return ResponseEntity.ok(dto);
                     })
                     .orElse(ResponseEntity.notFound().build());
-                    
+
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
@@ -218,7 +218,7 @@ public class ArtistController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteArtist(@PathVariable String id) {
+    public ResponseEntity<?> deleteArtist(@PathVariable String id, @RequestParam(defaultValue = "false") boolean hard) {
         // Only admins can delete artists
         if (!CurrentUser.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Only Admins can delete artists"));
@@ -231,7 +231,12 @@ public class ArtistController {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid artist ID format"));
         }
 
-        boolean deleted = artistService.softDeleteArtist(artistId);
+        boolean deleted;
+        if (hard) {
+            deleted = artistService.hardDeleteArtist(artistId);
+        } else {
+            deleted = artistService.softDeleteArtist(artistId);
+        }
 
         if (deleted) {
             return ResponseEntity.noContent().build();
