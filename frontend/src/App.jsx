@@ -1,17 +1,16 @@
 import './App.css'
+import Onboarding from "./pages/Onboarding.jsx";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <h1>Welcome to the React App</h1>
-        <p>
-          This is a simple React application with Tailwind CSS and ESLint
-          configured.
-        </p>
-      </header>
-    </div>
-  )
-}
+const App = () => {
+    return (
+        <Router>
+            <Routes>
+                <Route path="/onboarding" element={<Onboarding />} />
+                {/* Add other routes here if needed */}
+            </Routes>
+        </Router>
+    );
+};
 
 export default App
