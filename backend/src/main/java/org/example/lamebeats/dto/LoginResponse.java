@@ -6,6 +6,7 @@ import java.util.UUID;
 public class LoginResponse {
     private String token;
     private String userAgent;
+    private String userType;
     private UUID userId;
     private long tokenTtl;
     private LocalDateTime validUntil;
@@ -13,9 +14,10 @@ public class LoginResponse {
     // Constructors
     public LoginResponse() {}
 
-    public LoginResponse(String token, String userAgent, UUID userId, long tokenTtl, LocalDateTime validUntil) {
+    public LoginResponse(String token, String userAgent, String userType, UUID userId, long tokenTtl, LocalDateTime validUntil) {
         this.token = token;
         this.userAgent = userAgent;
+        this.userType = userType;
         this.userId = userId;
         this.tokenTtl = tokenTtl;
         this.validUntil = validUntil;
@@ -60,5 +62,13 @@ public class LoginResponse {
 
     public void setValidUntil(LocalDateTime validUntil) {
         this.validUntil = validUntil;
+    }
+
+    public String getUserType() {
+        return userType;
+    }
+
+    public void setUserType(String userType) {
+        this.userType = userType;
     }
 }

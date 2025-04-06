@@ -7,7 +7,9 @@ import org.example.lamebeats.dto.LyricsDto;
 import org.example.lamebeats.dto.SongDto;
 import org.example.lamebeats.enums.Language;
 import org.example.lamebeats.models.Lyrics;
+import org.example.lamebeats.models.Song;
 import org.example.lamebeats.services.LyricsService;
+import org.example.lamebeats.services.SongService;
 import org.example.lamebeats.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,16 +27,16 @@ import java.util.stream.Collectors;
 public class LyricsController {
     private final LyricsService lyricsService;
     private final CurrentUser currentUser;
-    private final SongController songController;
+    private final SongService songService;
 
     @Value("${musixmatch.apikey}")
     private String musixmatchApiKey;
 
     @Autowired
-    public LyricsController(LyricsService lyricsService, CurrentUser currentUser, SongController songController) {
+    public LyricsController(LyricsService lyricsService, CurrentUser currentUser, SongService songService) {
         this.lyricsService = lyricsService;
         this.currentUser = currentUser;
-        this.songController = songController;
+        this.songService = songService;
     }
 
     private String fetchLyricsFromMusixmatch(String commontrack_id) {
@@ -160,24 +162,22 @@ public class LyricsController {
     @PostMapping
     public ResponseEntity<?> createLyrics(@RequestParam String songId) {
         // Call the SongController's getSongById method to get song information
-        ResponseEntity<?> songResponse = songController.getSongById(songId);
-
-        // Check if the song was found
-        if (songResponse.getStatusCode() != HttpStatus.OK) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Song not found with ID: " + songId));
+        UUID id;
+        try {
+            id = UUID.fromString(songId);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid song ID format"));
         }
 
-        // The song data is directly in the response body (SongDto)
-        SongDto songDto = (SongDto) songResponse.getBody();
+        Optional<Song> activeSongById = songService.getActiveSongById(id);
 
         // Extract the title and artist name
-        String title = songDto.getTitle();
+        String title = activeSongById.get().getTitle();
         String artistName = "";
 
         // Get the first artist's name if available
-        if (songDto.getArtists() != null && !songDto.getArtists().isEmpty()) {
-            artistName = songDto.getArtists().iterator().next().getName();
+        if (activeSongById.get().getArtists() != null && !activeSongById.get().getArtists().isEmpty()) {
+            artistName = activeSongById.get().getArtists().iterator().next().getName();
         }
 
         // Check if we have enough information to query Musixmatch
