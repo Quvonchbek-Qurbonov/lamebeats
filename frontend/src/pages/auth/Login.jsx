@@ -40,7 +40,7 @@ const Login = () => {
             localStorage.setItem('tokenTtl', data.tokenTtl);
             localStorage.setItem('validUntil', data.validUntil);
 
-            navigate('/onboarding');
+            navigate('/admin');
         } catch (err) {
             setError('Something went wrong. Please try again.');
         }
