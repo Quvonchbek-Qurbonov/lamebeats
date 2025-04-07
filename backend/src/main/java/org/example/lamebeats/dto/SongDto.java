@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
 public class SongDto {
     private UUID id;
     private String title;
-    private UUID albumId;
-    private String albumTitle;
+    private AlbumDto album;
     private Integer duration;
     private String fileUrl;
     private String spotifyId;
@@ -28,8 +27,14 @@ public class SongDto {
 
         // Handle album nullable relationship
         if (song.getAlbum() != null) {
-            dto.setAlbumId(song.getAlbum().getId());
-            dto.setAlbumTitle(song.getAlbum().getTitle());
+            dto.setAlbum(new AlbumDto());
+            dto.getAlbum().setId(song.getAlbum().getId());
+            dto.getAlbum().setTitle(song.getAlbum().getTitle());
+            dto.getAlbum().setReleaseDate(song.getAlbum().getReleaseDate());
+            dto.getAlbum().setPhoto(song.getAlbum().getPhoto());
+            dto.getAlbum().setSpotifyId(song.getAlbum().getSpotifyId());
+            dto.getAlbum().setCreatedAt(song.getAlbum().getCreatedAt());
+            dto.getAlbum().setUpdatedAt(song.getAlbum().getUpdatedAt());
         }
 
         dto.setDuration(song.getDuration());
@@ -56,8 +61,8 @@ public class SongDto {
 
         // Only set IDs, not full objects
         if (song.getAlbum() != null) {
-            dto.setAlbumId(song.getAlbum().getId());
-            dto.setAlbumTitle(song.getAlbum().getTitle());
+            dto.setAlbum(new AlbumDto());
+            dto.getAlbum().setId(song.getAlbum().getId());
         }
 
         dto.setDuration(song.getDuration());
@@ -83,22 +88,6 @@ public class SongDto {
 
     public void setTitle(String title) {
         this.title = title;
-    }
-
-    public UUID getAlbumId() {
-        return albumId;
-    }
-
-    public void setAlbumId(UUID albumId) {
-        this.albumId = albumId;
-    }
-
-    public String getAlbumTitle() {
-        return albumTitle;
-    }
-
-    public void setAlbumTitle(String albumTitle) {
-        this.albumTitle = albumTitle;
     }
 
     public Integer getDuration() {
@@ -147,5 +136,13 @@ public class SongDto {
 
     public void setSpotifyId(String spotifyId) {
         this.spotifyId = spotifyId;
+    }
+
+    public AlbumDto getAlbum() {
+        return album;
+    }
+
+    public void setAlbum(AlbumDto album) {
+        this.album = album;
     }
 }

@@ -53,6 +53,7 @@ public class AuthService {
         return new LoginResponse(
                 token,
                 userAgent,
+                user.getType().toString(),
                 user.getId(),
                 Jwt.getTokenTtl(),
                 validUntil
