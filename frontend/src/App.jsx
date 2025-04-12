@@ -6,6 +6,7 @@ import Login from "./pages/auth/Login.jsx";
 import Logout from "./pages/auth/Logout.jsx";
 import AdminMainPage from "./pages/admin/AdminMainPage.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
+import ArtistProfilePage from "./pages/admin/artist-profile.jsx"; // ✅ Your page
 
 const App = () => {
     return (
@@ -18,18 +19,22 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
                 <Route path="/logout" element={<Logout />} />
 
+                {/* TEMP Route for your dev test */}
+                <Route path="/artist-profile" element={<ArtistProfilePage />} /> {/* ✅ This one */}
+
                 {/* Private Routes */}
                 <Route
                     path="/admin"
-                   element={
-                    <PrivateRoute>
-                        <AdminMainPage />
-                    </PrivateRoute>
-                   }
+                    element={
+                        <PrivateRoute>
+                            <AdminMainPage />
+                        </PrivateRoute>
+                    }
                 />
             </Routes>
         </Router>
     );
 };
 
-export default App
+export default App;
+
