@@ -21,12 +21,12 @@ const App = () => {
                 <Route path="/logout" element={<Logout/>}/>
 
                 {/* TEMP Route for your dev test */}
-                <Route path="/artist-profile" element={<ArtistProfilePage/>}/>
 
 
                 {/* Private Routes */}
                 <Route path="/admin" element={<PrivateRoute><AdminMainPage/></PrivateRoute>}/>
                 <Route path="/admin/search" element={<PrivateRoute><SearchPage/></PrivateRoute>}/>
+                <Route path="/admin/artist"  element={<PrivateRoute><ArtistProfilePage/></PrivateRoute>}/>
             </Routes>
         </Router>
     );
