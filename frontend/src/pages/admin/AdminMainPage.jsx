@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Search, Home, Library, Plus, Heart, PersonStanding, Disc3, Speech, Music2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, {useState, useEffect} from "react";
+import {Search, Home, Library, Plus, Heart, PersonStanding, Disc3, Speech, Music2} from "lucide-react";
+import {useNavigate} from "react-router-dom";
+import Sidebar from "../../components/Sidebar.jsx";
 
 export default function AdminMainPage() {
     const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function AdminMainPage() {
         const fetchSongs = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/songs?limit=5', {
+                const response = await fetch('http://lamebeats.steamfest.live/api/songs?limit=5', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -38,7 +39,7 @@ export default function AdminMainPage() {
         const fetchAlbums = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8080/api/albums?limit=5', {
+                const response = await fetch('http://lamebeats.steamfest.live/api/albums?limit=5', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -72,43 +73,7 @@ export default function AdminMainPage() {
     return (
         <div className="h-screen bg-black text-white flex overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-60 bg-black p-6 flex flex-col justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold text-red-500 mb-10">LameBeats</h1>
-                    <nav className="space-y-4 text-sm">
-                        <a href="#" className="flex items-center gap-3 hover:text-red-400">
-                            <Home size={18} /> Home
-                        </a>
-                        <a href="#search" className="flex items-center gap-3 hover:text-red-400">
-                            <Search size={18} /> External Search
-                        </a>
-                        <a href="#library" className="flex items-center gap-3 hover:text-red-400">
-                            <Library size={18} /> System Library
-                        </a>
-                    </nav>
-
-                    <div className="mt-10 space-y-4 text-sm">
-                        <a href="#" className="flex items-center gap-3 hover:text-red-400">
-                            <Speech size={18} /> Artists
-                        </a>
-                        <a href="#" className="flex items-center gap-3 hover:text-red-400">
-                            <Disc3 size={18} /> Albums
-                        </a>
-                        <a href="#" className="flex items-center gap-3 hover:text-red-400">
-                            <Music2 size={18} /> Songs
-                        </a>
-                    </div>
-                </div>
-
-                <div className="text-xs text-gray-400 space-y-1">
-                    <button
-                        onClick={handleLogout}
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
-                    >
-                        Logout
-                    </button>
-                </div>
-            </aside>
+            <Sidebar/>
 
             {/* Main Content */}
             <main className="flex-1 bg-gradient-to-b from-red-700/80 via-black to-black p-6 overflow-y-auto h-full">
@@ -141,7 +106,8 @@ export default function AdminMainPage() {
                                 <h2 className="text-2xl font-bold mb-4">Latest Songs</h2>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
                                     {songs.length > 0 ? songs.map((song) => (
-                                        <div key={song.id} className="bg-neutral-900 p-4 rounded-lg hover:bg-neutral-800 transition">
+                                        <div key={song.id}
+                                             className="bg-neutral-900 p-4 rounded-lg hover:bg-neutral-800 transition">
                                             <div className="aspect-square bg-red-700 rounded mb-3 overflow-hidden">
                                                 <img
                                                     src={song.album.photo}
@@ -167,7 +133,8 @@ export default function AdminMainPage() {
                                 <h2 className="text-2xl font-bold mb-4">Albums</h2>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
                                     {Object.values(albums).length > 0 ? Object.values(albums).map((album) => (
-                                        <div key={album.id} className="bg-neutral-900 p-4 rounded-lg hover:bg-neutral-800 transition">
+                                        <div key={album.id}
+                                             className="bg-neutral-900 p-4 rounded-lg hover:bg-neutral-800 transition">
                                             <div className="aspect-square bg-red-700 rounded mb-3 overflow-hidden">
                                                 <img
                                                     src={album.photo}
