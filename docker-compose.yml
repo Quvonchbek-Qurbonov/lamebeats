@@ -1,4 +1,22 @@
 services:
+  lamebeats-db:
+    image: postgres:17
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      PGPORT: ${DB_PORT}
+    container_name: lamebeats-db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      start_period: 10s
+      interval: 5s
+      retries: 5
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+
   backend:
     build:
       context: ./backend
@@ -7,11 +25,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - ./backend/.env
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/postgres
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - .env
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
