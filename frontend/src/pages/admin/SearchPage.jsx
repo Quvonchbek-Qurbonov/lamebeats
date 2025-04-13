@@ -1,7 +1,9 @@
 import React from 'react';
-import {useState, useEffect} from 'react';
-import {Search} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Plus, Check, Loader } from 'lucide-react';
 import Sidebar from "../../components/Sidebar.jsx";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function SearchPage() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -13,6 +15,8 @@ export default function SearchPage() {
         artist: true
     });
     const [error, setError] = useState(null);
+    const [addingTrack, setAddingTrack] = useState({});
+    const [addingAlbum, setAddingAlbum] = useState({});
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;
@@ -54,6 +58,98 @@ export default function SearchPage() {
         }
     };
 
+    const handleAddTrack = async (trackId) => {
+        // Set loading state for this specific track
+        setAddingTrack(prev => ({ ...prev, [trackId]: true }));
+
+        try {
+            const response = await fetch(
+                `http://lamebeats.steamfest.live/api/spotify/add-track/${trackId}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem("token"),
+                        'Content-Type': 'application/json',
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to add track');
+            }
+
+            // Show success popup
+            toast.success('Track successfully added to your library!', {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } catch (err) {
+            toast.error('Failed to add track. Please try again.', {
+                position: "bottom-right",
+                autoClose: 3000,
+                theme: "dark",
+            });
+            console.error(err);
+        } finally {
+            // End loading state after a small delay to show the success animation
+            setTimeout(() => {
+                setAddingTrack(prev => ({ ...prev, [trackId]: false }));
+            }, 500);
+        }
+    };
+
+    const handleAddAlbum = async (albumId) => {
+        // Set loading state for this specific album
+        setAddingAlbum(prev => ({ ...prev, [albumId]: true }));
+
+        try {
+            const response = await fetch(
+                `http://lamebeats.steamfest.live/api/spotify/add-album/${albumId}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem("token"),
+                        'Content-Type': 'application/json',
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to add album');
+            }
+
+            // Show success popup
+            toast.success('Album successfully added to your library!', {
+                position: "bottom-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } catch (err) {
+            toast.error('Failed to add album. Please try again.', {
+                position: "bottom-right",
+                autoClose: 3000,
+                theme: "dark",
+            });
+            console.error(err);
+        } finally {
+            // End loading state after a small delay to show the success animation
+            setTimeout(() => {
+                setAddingAlbum(prev => ({ ...prev, [albumId]: false }));
+            }, 500);
+        }
+    };
+
     const handleFilterChange = (filterName) => {
         setFilters(prev => ({
             ...prev,
@@ -78,7 +174,7 @@ export default function SearchPage() {
     return (
         <div className="flex h-screen text-white">
             {/* Sidebar */}
-                <Sidebar/>
+            <Sidebar/>
 
             {/* Main content area */}
             <div className="flex-1 overflow-hidden">
@@ -178,10 +274,24 @@ export default function SearchPage() {
                                                     <div className="text-gray-400 text-sm">
                                                         {formatDuration(song.duration)}
                                                     </div>
-                                                    <button
-                                                        className="ml-4 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition">
-                                                        ▶
-                                                    </button>
+                                                    <div className="flex items-center space-x-2">
+                                                        <button
+                                                            className="ml-4 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition"
+                                                        >
+                                                            ▶
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleAddTrack(song.spotifyId)}
+                                                            disabled={addingTrack[song.spotifyId]}
+                                                            className={`ml-1 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-all transform ${addingTrack[song.spotifyId] ? 'scale-110' : ''}`}
+                                                        >
+                                                            {addingTrack[song.spotifyId] ? (
+                                                                <Loader className="animate-spin" size={16} />
+                                                            ) : (
+                                                                <Plus size={16} />
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -196,13 +306,31 @@ export default function SearchPage() {
                                             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                             {searchResults.albums.map((album) => (
                                                 <div key={album.spotifyId}
-                                                     className="bg-red-900/20 p-4 rounded-md hover:bg-red-900/40 transition cursor-pointer">
+                                                     className="bg-red-900/20 p-4 rounded-md hover:bg-red-900/40 transition cursor-pointer relative group">
                                                     <div
-                                                        className="aspect-square bg-red-800 rounded overflow-hidden mb-3">
+                                                        className="aspect-square bg-red-800 rounded overflow-hidden mb-3 relative">
                                                         {album.images && album.images.length > 0 && (
                                                             <img src={album.images[0]} alt={album.name}
                                                                  className="w-full h-full object-cover"/>
                                                         )}
+
+                                                        {/* Album add overlay - updated with red blur */}
+                                                        <div className="absolute inset-0 bg-red-900/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleAddAlbum(album.spotifyId);
+                                                                }}
+                                                                disabled={addingAlbum[album.spotifyId]}
+                                                                className={`bg-red-600 hover:bg-red-700 text-white p-3 rounded-full transform ${addingAlbum[album.spotifyId] ? 'scale-110' : 'hover:scale-105'} transition-all duration-200`}
+                                                            >
+                                                                {addingAlbum[album.spotifyId] ? (
+                                                                    <Loader className="animate-spin" size={20} />
+                                                                ) : (
+                                                                    <Plus size={20} />
+                                                                )}
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <h3 className="text-white font-medium truncate">{album.name}</h3>
                                                     <p className="text-gray-400 text-sm truncate">
@@ -262,6 +390,9 @@ export default function SearchPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Toast notifications container */}
+            <ToastContainer position="bottom-right" />
         </div>
     );
 }
