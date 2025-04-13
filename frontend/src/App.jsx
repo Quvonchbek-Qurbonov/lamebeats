@@ -1,4 +1,6 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import SearchPage from "./pages/admin/Search-page.jsx"; // 👈 Make sure this path is correct
 import {BrowserRouter as Router, Routes, Route} from "react-router-dom";
 import Onboarding from "./pages/auth/Onboarding.jsx";
 import Register from "./pages/auth/Register.jsx";
@@ -21,6 +23,8 @@ const App = () => {
 
                 {/* TEMP Route for your dev test */}
                 <Route path="/artist-profile" element={<ArtistProfilePage />} /> {/* ✅ This one */}
+                <Route path="/search-" element={<SearchPage />} />
+
 
                 {/* Private Routes */}
                 <Route
@@ -37,4 +41,3 @@ const App = () => {
 };
 
 export default App;
-
