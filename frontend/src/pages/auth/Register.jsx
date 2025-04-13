@@ -33,7 +33,7 @@ const Register = () => {
         const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(formData.username)}`;
 
         try {
-            const response = await fetch('http://localhost:8080/api/users/register', {
+            const response = await fetch('http://lamebeats.steamfest.live/api/users/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
