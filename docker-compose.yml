@@ -33,8 +33,23 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    depends_on:
+      lamebeats-db:
+        condition: service_healthy
 
-# Network configuration (for future frontend integration)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lamebeats-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - REACT_APP_API_URL=http://lamebeats.steamfest.live/api
+      - PUBLIC_URL=http://lamebeats.steamfest.live
+    restart: unless-stopped
+
+# Network configuration
 networks:
   default:
     name: app-network
