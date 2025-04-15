@@ -75,7 +75,7 @@ export default function Albumpage() {
                           <p className="text-sm uppercase">Album</p>
                           <h1 className="text-6xl font-bold">SOS</h1>
                           <p className="text-sm mt-2">
-                              SZA • 2022 • 12 songs • 59 mins 54 seconds
+                             <img src="" alt="artist" className=" h-[28px] rounded-full"/> SZA • 2022 • 12 songs • 59 mins 54 seconds
                           </p>
                       </div>
                   </div>
