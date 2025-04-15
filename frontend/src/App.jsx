@@ -8,6 +8,7 @@ import Logout from "./pages/auth/Logout.jsx";
 import AdminMainPage from "./pages/admin/AdminMainPage.jsx";
 import PrivateRoute from "./components/PrivateRoute.jsx";
 import ArtistProfilePage from "./pages/admin/ArtistProfile.jsx";
+import Albumpage from "./pages/admin/Album.jsx";
 
 const App = () => {
     return (
@@ -19,7 +20,7 @@ const App = () => {
                 <Route path="/register" element={<Register/>}/>
                 <Route path="/login" element={<Login/>}/>
                 <Route path="/logout" element={<Logout/>}/>
-
+                <Route path="/album" element={<Albumpage/>}/>
                 {/* TEMP Route for your dev test */}
 
 
