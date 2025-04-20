@@ -102,9 +102,8 @@ public class SongController {
 
     @GetMapping("/{id}/stream")
     public ResponseEntity<Resource> streamSong(
-            @PathVariable UUID id,
-            @RequestHeader(value = "Range", required = false) Optional<String> rangeHeader) {
-        return songStreamingService.streamSong(id, rangeHeader);
+            @PathVariable String id) {
+        return songStreamingService.streamSong(id);
     }
 
     @GetMapping("/search")
@@ -218,7 +217,7 @@ public class SongController {
         }
 
         String title = payload.get("title").toString();
-        
+
         // Parse other fields
         Integer duration = null;
         if (payload.containsKey("duration") && payload.get("duration") != null) {
@@ -231,10 +230,10 @@ public class SongController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid duration format"));
             }
         }
-        
+
         String fileUrl = payload.containsKey("fileUrl") ? payload.get("fileUrl").toString() : null;
         String spotifyId = payload.containsKey("spotifyId") ? payload.get("spotifyId").toString() : null;
-        
+
         // Parse album ID
         UUID albumId = null;
         if (payload.containsKey("albumId") && payload.get("albumId") != null) {
@@ -244,7 +243,7 @@ public class SongController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid album ID format"));
             }
         }
-        
+
         // Parse artist IDs
         List<UUID> artistIds = new ArrayList<>();
         if (payload.containsKey("artistIds") && payload.get("artistIds") instanceof List) {
@@ -285,7 +284,7 @@ public class SongController {
         }
 
         String title = payload.containsKey("title") ? payload.get("title").toString() : null;
-        
+
         // Parse duration
         Integer duration = null;
         if (payload.containsKey("duration") && payload.get("duration") != null) {
@@ -298,10 +297,10 @@ public class SongController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid duration format"));
             }
         }
-        
+
         String genre = payload.containsKey("genre") ? payload.get("genre").toString() : null;
         String fileUrl = payload.containsKey("fileUrl") ? payload.get("fileUrl").toString() : null;
-        
+
         // Parse album ID
         UUID albumId = null;
         if (payload.containsKey("albumId")) {
@@ -317,7 +316,7 @@ public class SongController {
 
         try {
             Optional<Song> updatedSongOpt = songService.updateSong(songId, title, duration, genre, fileUrl, albumId);
-            
+
             // If song updated successfully and artists are provided, update artists
             if (updatedSongOpt.isPresent() && payload.containsKey("artistIds") && payload.get("artistIds") instanceof List) {
                 try {
@@ -325,21 +324,21 @@ public class SongController {
                             .stream()
                             .map(aId -> UUID.fromString(aId.toString()))
                             .collect(Collectors.toList());
-                    
+
                     updatedSongOpt = songService.setArtistsForSong(songId, artistIds);
                 } catch (Exception e) {
                     // Log but continue with the song update
                     System.err.println("Failed to update artists: " + e.getMessage());
                 }
             }
-            
+
             return updatedSongOpt
                     .map(song -> {
                         SongDto dto = SongDto.fromEntity(song);
                         return ResponseEntity.ok(dto);
                     })
                     .orElse(ResponseEntity.notFound().build());
-                    
+
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to update song: " + e.getMessage()));
