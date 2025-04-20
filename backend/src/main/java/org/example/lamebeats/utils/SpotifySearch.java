@@ -139,6 +139,7 @@ public class SpotifySearch {
         private String id;
         private String spotifyId;
         private String title;
+        private String fileUrl;
         private AlbumDto album;
         private Integer duration;
         private List<ArtistDto> artists;
@@ -157,6 +158,14 @@ public class SpotifySearch {
 
         public void setSpotifyId(String spotifyId) {
             this.spotifyId = spotifyId;
+        }
+
+        public String getFileUrl() {
+            return fileUrl;
+        }
+
+        public void setFileUrl(String fileUrl) {
+            this.fileUrl = fileUrl;
         }
 
         public String getTitle() {

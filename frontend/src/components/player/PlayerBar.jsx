@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useMusicPlayer } from '../../context/MusicPlayerContext';
 import AudioPlayer from './AudioPlayer';
 import { Maximize2, X } from 'lucide-react';
@@ -12,21 +12,144 @@ const PlayerBar = () => {
         playPrevious,
         toggleFullScreen,
         isFullScreenMode,
-        stopPlayback
+        stopPlayback,
+        clearCurrentSong
     } = useMusicPlayer();
 
-    const [audioUrl, setAudioUrl] = useState('');
+    // Create a single audio element ref at the PlayerBar level
+    const audioRef = useRef(null);
+    const [previewUrl, setPreviewUrl] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
+    // Fetch preview URL function at the PlayerBar level
+    const fetchPreviewUrl = async () => {
+        if (!currentSong) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const songId = currentSong.spotifyId || currentSong.id;
+
+            if (!songId) {
+                throw new Error("No valid song ID found");
+            }
+
+            // Try to use current domain's API endpoint
+            const apiUrl = `http://lamebeats.steamfest.live/api/songs/${songId}/preview`;
+
+            console.log(`Fetching preview from: ${apiUrl}`);
+
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (!data.url) {
+                throw new Error("No preview URL in response");
+            }
+
+            console.log("Setting preview URL:", data.url);
+            setPreviewUrl(data.url);
+            return data.url;
+
+        } catch (err) {
+            console.error("Error fetching preview URL:", err);
+            setError("Failed to fetch preview");
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle closing the player
+    const handleClosePlayer = () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+        }
+        setIsPlaying(false);
+        clearCurrentSong(); // This will clear the current song and hide the player
+    };
+
+    // Handle song changes
     useEffect(() => {
-        if (currentSong?.id) {
-            setAudioUrl(`http://lamebeats.steamfest.live/api/songs/${currentSong.id}/stream`);
+        if (currentSong) {
+            // Reset states for new song
+            setPreviewUrl('');
+            setError(null);
+
+            // If auto-play is enabled, fetch the preview
+            if (isPlaying) {
+                fetchPreviewUrl().catch(err => {
+                    console.error("Failed to fetch on song change:", err);
+                    setIsPlaying(false);
+                });
+            }
         }
     }, [currentSong]);
+
+    // Handle play/pause changes
+    useEffect(() => {
+        if (!audioRef.current) return;
+
+        if (isPlaying) {
+            // Need to fetch URL if we don't have one
+            if (!previewUrl && currentSong) {
+                fetchPreviewUrl().then(() => {
+                    // URL is now set, play will be handled in the next effect
+                }).catch(() => {
+                    setIsPlaying(false);
+                });
+            } else if (previewUrl) {
+                // We have a URL, play it
+                audioRef.current.play().catch(err => {
+                    console.error("Play error:", err);
+                    setIsPlaying(false);
+                });
+            }
+        } else {
+            // Pause the audio
+            audioRef.current.pause();
+        }
+    }, [isPlaying, previewUrl, currentSong]);
+
+    // Update audio element when URL changes
+    useEffect(() => {
+        if (audioRef.current && previewUrl) {
+            audioRef.current.src = previewUrl;
+
+            if (isPlaying) {
+                audioRef.current.play().catch(err => {
+                    console.error("Play error after URL change:", err);
+                    setIsPlaying(false);
+                });
+            }
+        }
+    }, [previewUrl]);
 
     if (!currentSong) return null;
 
     return (
         <>
+            {/* Single shared audio element for both views */}
+            <audio
+                ref={audioRef}
+                src={previewUrl}
+                onEnded={playNext}
+                onError={() => setError("Error playing track")}
+                // Important: do not add display:none - it can cause issues on some browsers
+            />
+
             {/* Regular player bar at bottom */}
             <div className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-red-900/95 to-black/95 border-t border-red-800 p-3 z-40 ${isFullScreenMode ? 'hidden' : 'flex'}`}>
                 <div className="container mx-auto flex items-center gap-4">
@@ -45,26 +168,49 @@ const PlayerBar = () => {
                         <p className="text-gray-400 text-sm truncate">
                             {currentSong.artists?.map(artist => artist.name).join(', ')}
                         </p>
+                        {error && (
+                            <p className="text-red-500 text-xs">{error}</p>
+                        )}
                     </div>
 
                     <div className="flex-1 max-w-xl">
                         <AudioPlayer
-                            audioUrl={audioUrl}
-                            songInfo={currentSong}
+                            audioRef={audioRef}
                             isPlaying={isPlaying}
                             setIsPlaying={setIsPlaying}
                             onNext={playNext}
                             onPrevious={playPrevious}
-                            onEnded={playNext}
+                            isLoading={isLoading}
+                            error={error}
+                            onPlayToggle={() => {
+                                if (!isPlaying && !previewUrl) {
+                                    fetchPreviewUrl().then(() => {
+                                        setIsPlaying(true);
+                                    }).catch(() => {});
+                                } else {
+                                    setIsPlaying(!isPlaying);
+                                }
+                            }}
                         />
                     </div>
 
-                    <button
-                        onClick={toggleFullScreen}
-                        className="ml-4 text-gray-300 hover:text-white p-2"
-                    >
-                        <Maximize2 size={20} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={toggleFullScreen}
+                            className="text-gray-300 hover:text-white p-2"
+                        >
+                            <Maximize2 size={20} />
+                        </button>
+
+                        {/* Close button */}
+                        <button
+                            onClick={handleClosePlayer}
+                            className="text-gray-300 hover:text-red-400 p-2 rounded-full"
+                            title="Close player"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -95,17 +241,29 @@ const PlayerBar = () => {
                         <p className="text-gray-300 text-center mt-2">
                             {currentSong.artists?.map(artist => artist.name).join(', ')}
                         </p>
+                        {error && (
+                            <p className="text-red-500 text-sm mt-2">{error}</p>
+                        )}
                     </div>
 
                     <div className="p-8 max-w-lg mx-auto w-full">
                         <AudioPlayer
-                            audioUrl={audioUrl}
-                            songInfo={currentSong}
+                            audioRef={audioRef}
                             isPlaying={isPlaying}
                             setIsPlaying={setIsPlaying}
                             onNext={playNext}
                             onPrevious={playPrevious}
-                            onEnded={playNext}
+                            isLoading={isLoading}
+                            error={error}
+                            onPlayToggle={() => {
+                                if (!isPlaying && !previewUrl) {
+                                    fetchPreviewUrl().then(() => {
+                                        setIsPlaying(true);
+                                    }).catch(() => {});
+                                } else {
+                                    setIsPlaying(!isPlaying);
+                                }
+                            }}
                         />
                     </div>
                 </div>

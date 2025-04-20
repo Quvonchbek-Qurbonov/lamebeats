@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext } from 'react';
 
 const MusicPlayerContext = createContext();
 
@@ -58,6 +58,13 @@ export const MusicPlayerProvider = ({ children }) => {
         setIsFullScreenMode(false);
     };
 
+    // New function to completely clear the player
+    const clearCurrentSong = () => {
+        setCurrentSong(null);
+        setIsPlaying(false);
+        setIsFullScreenMode(false);
+    };
+
     const value = {
         currentSong,
         isPlaying,
@@ -69,7 +76,8 @@ export const MusicPlayerProvider = ({ children }) => {
         togglePlay,
         setIsPlaying,
         toggleFullScreen,
-        stopPlayback
+        stopPlayback,
+        clearCurrentSong
     };
 
     return (
