@@ -4,6 +4,7 @@ import org.example.lamebeats.dto.SongDto;
 import org.example.lamebeats.models.Song;
 import org.example.lamebeats.services.SongService;
 import org.example.lamebeats.services.SongStreamingService;
+import org.example.lamebeats.services.SpotifyService;
 import org.example.lamebeats.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -20,12 +21,14 @@ public class SongController {
     private final SongService songService;
     private final CurrentUser currentUser;
     private final SongStreamingService songStreamingService;
+    private final SpotifyService spotifyService;
 
     @Autowired
-    public SongController(SongService songService, CurrentUser currentUser, SongStreamingService songStreamingService) {
+    public SongController(SongService songService, CurrentUser currentUser, SongStreamingService songStreamingService, SpotifyService spotifyService) {
         this.songService = songService;
         this.currentUser = currentUser;
         this.songStreamingService = songStreamingService;
+        this.spotifyService = spotifyService;
     }
 
     @GetMapping
@@ -104,6 +107,13 @@ public class SongController {
     public ResponseEntity<Resource> streamSong(
             @PathVariable String id) {
         return songStreamingService.streamSong(id);
+    }
+
+    @GetMapping("/{id}/preview")
+    public ResponseEntity<?> getPreviewUrl(@PathVariable String id) {
+        List<String> trackPreviewUrls = spotifyService.getTrackPreviewUrls(id);
+
+        return ResponseEntity.ok(Map.of("url", trackPreviewUrls.getFirst()));
     }
 
     @GetMapping("/search")

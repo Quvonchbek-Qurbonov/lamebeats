@@ -1,54 +1,62 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
 
 const AudioPlayer = ({
-                         audioUrl,
-                         songInfo,
+                         audioRef,
                          isPlaying,
                          setIsPlaying,
                          onNext,
                          onPrevious,
-                         onEnded
+                         isLoading,
+                         error,
+                         onPlayToggle
                      }) => {
-    const audioRef = useRef(null);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [volume, setVolume] = useState(0.7);
     const [isMuted, setIsMuted] = useState(false);
 
+    // Set up listeners for time updates and metadata
     useEffect(() => {
-        if (isPlaying) {
-            audioRef.current.play().catch(error => {
-                console.error("Playback error:", error);
-                setIsPlaying(false);
-            });
-        } else {
-            audioRef.current.pause();
-        }
-    }, [isPlaying, audioUrl]);
+        if (!audioRef?.current) return;
 
+        const audio = audioRef.current;
+
+        const handleTimeUpdate = () => {
+            setCurrentTime(audio.currentTime);
+        };
+
+        const handleLoadedMetadata = () => {
+            setDuration(audio.duration);
+        };
+
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+        audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+        // Set initial values if audio is already loaded
+        if (audio.duration) setDuration(audio.duration);
+        if (audio.currentTime) setCurrentTime(audio.currentTime);
+
+        return () => {
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+            audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
+    }, [audioRef]);
+
+    // Handle volume changes
     useEffect(() => {
-        if (audioRef.current) {
+        if (audioRef?.current) {
             audioRef.current.volume = isMuted ? 0 : volume;
         }
-    }, [volume, isMuted]);
+    }, [volume, isMuted, audioRef]);
 
-    const handleTimeUpdate = () => {
-        setCurrentTime(audioRef.current.currentTime);
-    };
-
-    const handleLoadedMetadata = () => {
-        setDuration(audioRef.current.duration);
-    };
-
+    // Seek functionality
     const handleSeek = (e) => {
+        if (!audioRef?.current) return;
+
         const seekTime = (e.target.value / 100) * duration;
         setCurrentTime(seekTime);
         audioRef.current.currentTime = seekTime;
-    };
-
-    const togglePlay = () => {
-        setIsPlaying(!isPlaying);
     };
 
     const toggleMute = () => {
@@ -65,14 +73,6 @@ const AudioPlayer = ({
 
     return (
         <div className="w-full">
-            <audio
-                ref={audioRef}
-                src={audioUrl}
-                onTimeUpdate={handleTimeUpdate}
-                onLoadedMetadata={handleLoadedMetadata}
-                onEnded={onEnded}
-            />
-
             <div className="flex flex-col gap-2 w-full">
                 <div className="flex justify-between items-center text-xs text-gray-400">
                     <span>{formatTime(currentTime)}</span>
@@ -97,7 +97,7 @@ const AudioPlayer = ({
                             onClick={toggleMute}
                             className="text-gray-300 hover:text-white p-1"
                         >
-                            {isMuted ? <VolumeX size={18} /> : <Volume2 size={18} />}
+                            {isMuted ? <VolumeX size={18}/> : <Volume2 size={18}/>}
                         </button>
                         <input
                             type="range"
@@ -118,24 +118,29 @@ const AudioPlayer = ({
                             onClick={onPrevious}
                             className="text-gray-300 hover:text-white"
                         >
-                            <SkipBack size={24} />
+                            <SkipBack size={24}/>
                         </button>
                         <button
-                            onClick={togglePlay}
-                            className="bg-white rounded-full p-2 text-black hover:scale-105 transition"
+                            onClick={onPlayToggle}
+                            disabled={isLoading}
+                            className={`bg-white rounded-full p-2 text-black hover:scale-105 transition ${isLoading ? 'opacity-70' : ''}`}
                         >
-                            {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-0.5" />}
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"/>
+                            ) : (
+                                isPlaying ? <Pause size={20}/> : <Play size={20} className="ml-0.5"/>
+                            )}
                         </button>
                         <button
                             onClick={onNext}
                             className="text-gray-300 hover:text-white"
                         >
-                            <SkipForward size={24} />
+                            <SkipForward size={24}/>
                         </button>
                     </div>
 
                     <div className="w-24">
-                        {/* Placeholder to balance the layout */}
+                        {/* Empty space to balance layout */}
                     </div>
                 </div>
             </div>

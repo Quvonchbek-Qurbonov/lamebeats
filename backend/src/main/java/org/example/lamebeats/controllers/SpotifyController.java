@@ -290,6 +290,7 @@ public class SpotifyController {
                     // Set basic song info
                     songDto.setSpotifyId(track.getId());
                     songDto.setTitle(track.getName());
+                    songDto.setFileUrl(track.getPreview_url());
                     songDto.setDuration(track.getDuration_ms() / 1000); // Convert ms to seconds
 
                     // Check if song exists in DB

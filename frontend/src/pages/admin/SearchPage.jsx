@@ -111,7 +111,8 @@ export default function SearchPage() {
     const handlePlayTrack = (song) => {
         // Transform to the format expected by the player
         const songToPlay = {
-            id: song.id || song.spotifyId,
+            id: song.id,
+            spotifyId: song.spotifyId,  // Keep the spotifyId as its own property
             title: song.title || song.name,
             artists: song.artists,
             album: song.album || { images: song.images }
@@ -119,7 +120,8 @@ export default function SearchPage() {
 
         // Get all songs to use as queue
         const allSongs = searchResults.songs.map(song => ({
-            id: song.id || song.spotifyId,
+            id: song.id,
+            spotifyId: song.spotifyId,  // Keep the spotifyId for all queue songs too
             title: song.title || song.name,
             artists: song.artists,
             album: song.album || { images: song.images }
