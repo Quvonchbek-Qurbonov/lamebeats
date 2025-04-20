@@ -3,8 +3,10 @@ package org.example.lamebeats.controllers;
 import org.example.lamebeats.dto.SongDto;
 import org.example.lamebeats.models.Song;
 import org.example.lamebeats.services.SongService;
+import org.example.lamebeats.services.SongStreamingService;
 import org.example.lamebeats.utils.CurrentUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,11 +19,13 @@ import java.util.stream.Collectors;
 public class SongController {
     private final SongService songService;
     private final CurrentUser currentUser;
+    private final SongStreamingService songStreamingService;
 
     @Autowired
-    public SongController(SongService songService, CurrentUser currentUser) {
+    public SongController(SongService songService, CurrentUser currentUser, SongStreamingService songStreamingService) {
         this.songService = songService;
         this.currentUser = currentUser;
+        this.songStreamingService = songStreamingService;
     }
 
     @GetMapping
@@ -94,6 +98,13 @@ public class SongController {
                     return ResponseEntity.ok(dto);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/stream")
+    public ResponseEntity<Resource> streamSong(
+            @PathVariable UUID id,
+            @RequestHeader(value = "Range", required = false) Optional<String> rangeHeader) {
+        return songStreamingService.streamSong(id, rangeHeader);
     }
 
     @GetMapping("/search")
