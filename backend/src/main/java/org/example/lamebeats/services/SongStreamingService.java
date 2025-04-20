@@ -1,7 +1,10 @@
 package org.example.lamebeats.services;
 
+import org.example.lamebeats.dto.AlbumDto;
+import org.example.lamebeats.dto.ArtistDto;
 import org.example.lamebeats.models.Song;
 import org.example.lamebeats.repositories.SongRepository;
+import org.example.lamebeats.utils.parsers.SpotifyTrackParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -17,28 +20,45 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class SongStreamingService {
 
     private final SongRepository songRepository;
+    private final SpotifyService spotifyService;
 
     @Autowired
-    public SongStreamingService(SongRepository songRepository) {
+    public SongStreamingService(SongRepository songRepository, SpotifyService spotifyService) {
         this.songRepository = songRepository;
+        this.spotifyService = spotifyService;
     }
 
-    public ResponseEntity<Resource> streamSong(UUID songId, Optional<String> rangeHeader) {
-        // Get the song from the repository
-        Optional<Song> songOptional = songRepository.findActiveById(songId);
-        if (songOptional.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Song not found");
+    public ResponseEntity<Resource> streamSong(String songSpotifyId) {
+        Song song = songRepository.findBySpotifyId(songSpotifyId);
+
+        if (song == null) {
+            // Song not found locally, fetch from Spotify
+            SpotifyTrackParser songSpotify = spotifyService.getTrackByIdFromSpotify(songSpotifyId);
+
+            if (songSpotify == null) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Song not found on Spotify");
+            }
+
+            song = new Song();
+            song.setSpotifyId(songSpotifyId);
+            song.setFileUrl(songSpotify.getPreviewUrl());
         }
 
-        Song song = songOptional.get();
         String fileUrl = song.getFileUrl();
+
+        if (fileUrl == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Song preview not available");
+        }
+
 
         try {
             // Create a URL resource from the file URL
@@ -55,11 +75,6 @@ public class SongStreamingService {
             // Enable partial content streaming
             headers.add(HttpHeaders.ACCEPT_RANGES, "bytes");
 
-            // If range header is provided, process it for partial content
-            if (rangeHeader.isPresent() && rangeHeader.get().startsWith("bytes=")) {
-                return processPartialContent(urlResource, rangeHeader.get(), headers);
-            }
-
             // Return the full resource for normal requests
             return ResponseEntity.ok()
                     .headers(headers)
@@ -68,9 +83,6 @@ public class SongStreamingService {
         } catch (MalformedURLException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                     "Invalid URL for song file: " + e.getMessage());
-        } catch (IOException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Error streaming song: " + e.getMessage());
         }
     }
 
