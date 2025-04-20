@@ -1,9 +1,10 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
-import { Search, Plus, Check, Loader } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Check, Loader, Play } from 'lucide-react';
 import Sidebar from "../../components/Sidebar.jsx";
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useMusicPlayer } from '../../context/MusicPlayerContext';
+import PlayerBar from '../../components/player/PlayerBar';
 
 export default function SearchPage() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +18,9 @@ export default function SearchPage() {
     const [error, setError] = useState(null);
     const [addingTrack, setAddingTrack] = useState({});
     const [addingAlbum, setAddingAlbum] = useState({});
+
+    // Music player context
+    const { playSong } = useMusicPlayer();
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) return;
@@ -102,6 +106,26 @@ export default function SearchPage() {
                 setAddingTrack(prev => ({ ...prev, [trackId]: false }));
             }, 500);
         }
+    };
+
+    const handlePlayTrack = (song) => {
+        // Transform to the format expected by the player
+        const songToPlay = {
+            id: song.id || song.spotifyId,
+            title: song.title || song.name,
+            artists: song.artists,
+            album: song.album || { images: song.images }
+        };
+
+        // Get all songs to use as queue
+        const allSongs = searchResults.songs.map(song => ({
+            id: song.id || song.spotifyId,
+            title: song.title || song.name,
+            artists: song.artists,
+            album: song.album || { images: song.images }
+        }));
+
+        playSong(songToPlay, allSongs);
     };
 
     const handleAddAlbum = async (albumId) => {
@@ -234,7 +258,7 @@ export default function SearchPage() {
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 overflow-y-auto p-4">
+                    <div className="flex-1 overflow-y-auto p-4 pb-24">
                         {loading && (
                             <div className="flex justify-center items-center h-full">
                                 <div
@@ -276,9 +300,10 @@ export default function SearchPage() {
                                                     </div>
                                                     <div className="flex items-center space-x-2">
                                                         <button
+                                                            onClick={() => handlePlayTrack(song)}
                                                             className="ml-4 bg-red-600 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition"
                                                         >
-                                                            ▶
+                                                            <Play size={16} className="ml-0.5" />
                                                         </button>
                                                         <button
                                                             onClick={() => handleAddTrack(song.spotifyId)}
@@ -390,6 +415,9 @@ export default function SearchPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Player Bar Component */}
+            <PlayerBar />
 
             {/* Toast notifications container */}
             <ToastContainer position="bottom-right" />
