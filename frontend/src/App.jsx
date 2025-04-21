@@ -10,6 +10,7 @@ import PrivateRoute from "./components/PrivateRoute.jsx";
 import ArtistProfilePage from "./pages/admin/ArtistProfile.jsx";
 import { MusicPlayerProvider } from "./context/MusicPlayerContext.jsx";
 import PlayerBar from "./components/player/PlayerBar.jsx";
+import ProfilePage from "./pages/user/UserProfile.jsx";
 
 const App = () => {
     return (
@@ -24,7 +25,7 @@ const App = () => {
                     <Route path="/logout" element={<Logout/>}/>
 
                     {/* TEMP Route for your dev test */}
-
+                    <Route path="/user/profile" element={<ProfilePage/>}/>
                     {/* Private Routes */}
                     <Route path="/admin" element={<PrivateRoute><AdminMainPage/></PrivateRoute>}/>
                     <Route path="/admin/search" element={<PrivateRoute><SearchPage/></PrivateRoute>}/>
