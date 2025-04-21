@@ -120,62 +120,62 @@ export default function Albumpage() {
             </main>
 
             {/* Now Playing Bar */}
-            <footer className="absolute bottom-0 w-full bg-zinc-900 p-4 flex items-center justify-between">
-                <div className="w-full bg-[#121212] text-white px-6 py-3 flex items-center justify-between border-t border-purple-500 rounded-t-2xl">
-                    {/* Left Section */}
-                    <div className="flex items-center gap-4 w-1/4">
-                        <img
-                            src="https://i.scdn.co/image/ab67616d00001e02394b2d5357489abed0c83a17"
-                            alt="Album Cover"
-                            className="w-14 h-14 rounded"
-                        />
-                        <div>
-                            <h4 className="text-sm font-medium">Snooze</h4>
-                            <p className="text-xs text-gray-400">SZA</p>
-                        </div>
-                        <button onClick={() => setIsLiked(!isLiked)}>
-                            {isLiked ? (
-                                <FaHeart className="ml-2 text-pink-500" />
-                            ) : (
-                                <FaRegHeart className="ml-2 text-gray-400 hover:text-white" />
-                            )}
-                        </button>
-                    </div>
+            {/*<footer className="absolute bottom-0 w-full bg-zinc-900 p-4 flex items-center justify-between">*/}
+            {/*    <div className="w-full bg-[#121212] text-white px-6 py-3 flex items-center justify-between border-t border-purple-500 rounded-t-2xl">*/}
+            {/*        /!* Left Section *!/*/}
+            {/*        <div className="flex items-center gap-4 w-1/4">*/}
+            {/*            <img*/}
+            {/*                src="https://i.scdn.co/image/ab67616d00001e02394b2d5357489abed0c83a17"*/}
+            {/*                alt="Album Cover"*/}
+            {/*                className="w-14 h-14 rounded"*/}
+            {/*            />*/}
+            {/*            <div>*/}
+            {/*                <h4 className="text-sm font-medium">Snooze</h4>*/}
+            {/*                <p className="text-xs text-gray-400">SZA</p>*/}
+            {/*            </div>*/}
+            {/*            <button onClick={() => setIsLiked(!isLiked)}>*/}
+            {/*                {isLiked ? (*/}
+            {/*                    <FaHeart className="ml-2 text-pink-500" />*/}
+            {/*                ) : (*/}
+            {/*                    <FaRegHeart className="ml-2 text-gray-400 hover:text-white" />*/}
+            {/*                )}*/}
+            {/*            </button>*/}
+            {/*        </div>*/}
 
-                    {/* Center Section */}
-                    <div className="flex flex-col items-center w-2/4">
-                        <div className="flex gap-6 items-center mb-1">
-                            <FaRandom className="text-gray-400 hover:text-white cursor-pointer" />
-                            <FaStepBackward className="cursor-pointer" />
-                            <button
-                                className="bg-white text-black rounded-full p-2"
-                                onClick={() => setIsPlaying(!isPlaying)}
-                            >
-                                {isPlaying ? <FaPause size={14} /> : <FaPlay size={14} />}
-                            </button>
-                            <FaStepForward className="cursor-pointer" />
-                            <BiChat className="text-gray-400 hover:text-white cursor-pointer" />
-                        </div>
-                        <div className="flex items-center gap-2 w-full">
-                            <span className="text-xs text-gray-400">3:00</span>
-                            <div className="w-full bg-gray-600 h-1 rounded-full overflow-hidden">
-                                <div className="w-[80%] h-full bg-white"></div>
-                            </div>
-                            <span className="text-xs text-gray-400">3:22</span>
-                        </div>
-                    </div>
+            {/*        /!* Center Section *!/*/}
+            {/*        <div className="flex flex-col items-center w-2/4">*/}
+            {/*            <div className="flex gap-6 items-center mb-1">*/}
+            {/*                <FaRandom className="text-gray-400 hover:text-white cursor-pointer" />*/}
+            {/*                <FaStepBackward className="cursor-pointer" />*/}
+            {/*                <button*/}
+            {/*                    className="bg-white text-black rounded-full p-2"*/}
+            {/*                    onClick={() => setIsPlaying(!isPlaying)}*/}
+            {/*                >*/}
+            {/*                    {isPlaying ? <FaPause size={14} /> : <FaPlay size={14} />}*/}
+            {/*                </button>*/}
+            {/*                <FaStepForward className="cursor-pointer" />*/}
+            {/*                <BiChat className="text-gray-400 hover:text-white cursor-pointer" />*/}
+            {/*            </div>*/}
+            {/*            <div className="flex items-center gap-2 w-full">*/}
+            {/*                <span className="text-xs text-gray-400">3:00</span>*/}
+            {/*                <div className="w-full bg-gray-600 h-1 rounded-full overflow-hidden">*/}
+            {/*                    <div className="w-[80%] h-full bg-white"></div>*/}
+            {/*                </div>*/}
+            {/*                <span className="text-xs text-gray-400">3:22</span>*/}
+            {/*            </div>*/}
+            {/*        </div>*/}
 
-                    {/* Right Section */}
-                    <div className="flex items-center gap-4 w-1/4 justify-end">
-                        <MdQueueMusic className="text-gray-400 hover:text-white cursor-pointer" />
-                        <HiSpeakerWave className="text-gray-400 hover:text-white cursor-pointer" />
-                        <div className="w-20 bg-gray-600 h-1 rounded-full overflow-hidden">
-                            <div className="w-[50%] h-full bg-white"></div>
-                        </div>
-                        <FaExpand className="text-gray-400 hover:text-white cursor-pointer" />
-                    </div>
-                </div>
-            </footer>
+            {/*        /!* Right Section *!/*/}
+            {/*        <div className="flex items-center gap-4 w-1/4 justify-end">*/}
+            {/*            <MdQueueMusic className="text-gray-400 hover:text-white cursor-pointer" />*/}
+            {/*            <HiSpeakerWave className="text-gray-400 hover:text-white cursor-pointer" />*/}
+            {/*            <div className="w-20 bg-gray-600 h-1 rounded-full overflow-hidden">*/}
+            {/*                <div className="w-[50%] h-full bg-white"></div>*/}
+            {/*            </div>*/}
+            {/*            <FaExpand className="text-gray-400 hover:text-white cursor-pointer" />*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</footer>*/}
         </div>
     );
 }
