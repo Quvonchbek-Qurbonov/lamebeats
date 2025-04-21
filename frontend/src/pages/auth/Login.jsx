@@ -43,6 +43,7 @@ const Login = () => {
             navigate('/admin');
         } catch (err) {
             setError('Something went wrong. Please try again.');
+
         }
     };
 
