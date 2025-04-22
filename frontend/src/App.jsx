@@ -23,8 +23,6 @@ const App = () => {
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/logout" element={<Logout/>}/>
 
-                    {/* TEMP Route for your dev test */}
-
                     {/* Private Routes */}
                     <Route path="/admin" element={<PrivateRoute><AdminMainPage/></PrivateRoute>}/>
                     <Route path="/admin/search" element={<PrivateRoute><SearchPage/></PrivateRoute>}/>
