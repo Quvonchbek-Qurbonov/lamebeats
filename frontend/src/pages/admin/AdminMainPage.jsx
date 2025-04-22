@@ -14,7 +14,7 @@ export default function AdminMainPage() {
         const fetchSongs = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://lamebeats.steamfest.live/api/songs?limit=5', {
+                const response = await fetch('http://35.209.62.223/api/songs?limit=5', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -39,7 +39,7 @@ export default function AdminMainPage() {
         const fetchAlbums = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://lamebeats.steamfest.live/api/albums?limit=5', {
+                const response = await fetch('http://35.209.62.223/api/albums?limit=5', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',

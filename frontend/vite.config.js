@@ -15,6 +15,6 @@ export default defineConfig({
         host: true,
         strictPort: true,
         port: 5173,
-        allowedHosts: ['lamebeats.steamfest.live'],
+        allowedHosts: ['35.209.62.223'],
     }
 })
