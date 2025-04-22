@@ -38,7 +38,7 @@ export default function SearchPage() {
             if (filters.artist) queryParams.append('artist', 'true');
 
             const response = await fetch(
-                `http://lamebeats.steamfest.live/api/spotify/search?${queryParams.toString()}&page=1&limit=10`,
+                `http://35.209.62.223/api/spotify/search?${queryParams.toString()}&page=1&limit=10`,
                 {
                     method: 'GET',
                     headers: {
@@ -68,7 +68,7 @@ export default function SearchPage() {
 
         try {
             const response = await fetch(
-                `http://lamebeats.steamfest.live/api/spotify/add-track/${trackId}`,
+                `http://35.209.62.223/api/spotify/add-track/${trackId}`,
                 {
                     method: 'POST',
                     headers: {
@@ -136,7 +136,7 @@ export default function SearchPage() {
 
         try {
             const response = await fetch(
-                `http://lamebeats.steamfest.live/api/spotify/add-album/${albumId}`,
+                `http://35.209.62.223/api/spotify/add-album/${albumId}`,
                 {
                     method: 'POST',
                     headers: {
