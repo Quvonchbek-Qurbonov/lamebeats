@@ -10,8 +10,8 @@ import PrivateRoute from "./components/PrivateRoute.jsx";
 import ArtistProfilePage from "./pages/admin/ArtistProfile.jsx";
 import { MusicPlayerProvider } from "./context/MusicPlayerContext.jsx";
 import PlayerBar from "./components/player/PlayerBar.jsx";
-import AlbumPage from "./pages/admin/album.jsx";
-import AlbumsPage from "./pages/admin/albums.jsx";
+import AlbumPage from "./pages/admin/Album.jsx";
+import AlbumsPage from "./pages/admin/Albums.jsx";
 
 const App = () => {
     return (
@@ -24,7 +24,8 @@ const App = () => {
                     <Route path="/register" element={<Register/>}/>
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/logout" element={<Logout/>}/>
-                    <Route path="albums" element={<AlbumsPage/>}/>
+
+
                     {/* Private Routes */}
                     <Route path="/admin" element={<PrivateRoute><AdminMainPage/></PrivateRoute>}/>
                     <Route path="/admin/search" element={<PrivateRoute><SearchPage/></PrivateRoute>}/>

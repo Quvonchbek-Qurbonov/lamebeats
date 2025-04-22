@@ -10,6 +10,8 @@ export const MusicPlayerProvider = ({ children }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreenMode, setIsFullScreenMode] = useState(false);
 
+    // Choose ONE of these approaches:
+    // Option 1: Use the programmatic Audio object (recommended)
     const audioRef = useRef(new Audio());
 
     // Handle audio source updates
@@ -40,8 +42,17 @@ export const MusicPlayerProvider = ({ children }) => {
     // Automatically play next when song ends
     useEffect(() => {
         const handleEnded = () => playNext();
-        audioRef.current.addEventListener("ended", handleEnded);
-        return () => audioRef.current.removeEventListener("ended", handleEnded);
+
+        // Add a safety check to prevent the error
+        if (audioRef.current) {
+            audioRef.current.addEventListener("ended", handleEnded);
+            return () => {
+                if (audioRef.current) {
+                    audioRef.current.removeEventListener("ended", handleEnded);
+                }
+            };
+        }
+        return undefined;
     }, [queue]);
 
     const playSong = (song, songList = []) => {
@@ -63,7 +74,7 @@ export const MusicPlayerProvider = ({ children }) => {
 
     const playPrevious = () => {
         // Just restart for now
-        if (currentSong) {
+        if (currentSong && audioRef.current) {
             audioRef.current.currentTime = 0;
             audioRef.current.play();
         }
@@ -75,8 +86,10 @@ export const MusicPlayerProvider = ({ children }) => {
 
     const stopPlayback = () => {
         setIsPlaying(false);
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
     };
 
     const clearCurrentSong = () => {
@@ -102,8 +115,8 @@ export const MusicPlayerProvider = ({ children }) => {
     return (
         <MusicPlayerContext.Provider value={value}>
             {children}
-            {/* This audio element is hidden but functional */}
-            <audio ref={audioRef} />
+            {/* Remove this line to fix the conflict */}
+            {/* <audio ref={audioRef} /> */}
         </MusicPlayerContext.Provider>
     );
 };
