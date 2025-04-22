@@ -29,7 +29,10 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",
-            "http://35.209.62.223"
+            "http://localhost:80",
+            "http://35.209.62.223",
+            "http://35.209.62.223:80",
+            "http://35.209.62.223:5173"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
