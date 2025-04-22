@@ -50,7 +50,8 @@ export default function Sidebar() {
             <div className="text-xs text-gray-400 space-y-1">
                 <button
                     onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out">
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
+                >
                     Logout
                 </button>
             </div>
