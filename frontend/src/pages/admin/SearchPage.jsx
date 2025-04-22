@@ -222,7 +222,7 @@ export default function SearchPage() {
                     </div>
 
                     {/* Filters */}
-                    <div className="flex gap-4 p-4">
+                    <div className="flex flex-wrap items-center gap-4 p-4">
                         <div className="text-white font-medium">Filter by:</div>
                         <label className="flex items-center text-white cursor-pointer">
                             <input
