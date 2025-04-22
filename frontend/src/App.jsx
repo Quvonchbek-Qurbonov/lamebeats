@@ -10,6 +10,7 @@ import PrivateRoute from "./components/PrivateRoute.jsx";
 import ArtistProfilePage from "./pages/admin/ArtistProfile.jsx";
 import { MusicPlayerProvider } from "./context/MusicPlayerContext.jsx";
 import PlayerBar from "./components/player/PlayerBar.jsx";
+import AuthTransitionUI from "./pages/auth/LogAndReg.jsx";
 import AlbumPage from "./pages/admin/Album.jsx";
 import AlbumsPage from "./pages/admin/Albums.jsx";
 
@@ -24,7 +25,7 @@ const App = () => {
                     <Route path="/register" element={<Register/>}/>
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/logout" element={<Logout/>}/>
-
+                    <Route path="/loginreg" element={<AuthTransitionUI/>}/>
 
                     {/* Private Routes */}
                     <Route path="/admin" element={<PrivateRoute><AdminMainPage/></PrivateRoute>}/>

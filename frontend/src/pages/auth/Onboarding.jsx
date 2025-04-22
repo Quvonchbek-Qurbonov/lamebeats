@@ -8,7 +8,7 @@ const Onboarding = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            navigate("/login");
+            navigate("/loginreg");
         }, 3000);
 
         // Cleanup timer when component unmounts
