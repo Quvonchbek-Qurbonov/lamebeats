@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
 
 const MusicPlayerContext = createContext();
 
@@ -10,79 +10,113 @@ export const MusicPlayerProvider = ({ children }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreenMode, setIsFullScreenMode] = useState(false);
 
+    // Choose ONE of these approaches:
+    // Option 1: Use the programmatic Audio object (recommended)
+    const audioRef = useRef(new Audio());
+
+    // Handle audio source updates
+    useEffect(() => {
+        if (currentSong?.audioUrl) {
+            audioRef.current.src = currentSong.audioUrl;
+            if (isPlaying) {
+                audioRef.current.play().catch(err => {
+                    console.error("Playback error:", err);
+                });
+            }
+        }
+    }, [currentSong]);
+
+    // Play/pause logic when isPlaying changes
+    useEffect(() => {
+        if (!audioRef.current) return;
+
+        if (isPlaying) {
+            audioRef.current.play().catch(err => {
+                console.error("Playback error:", err);
+            });
+        } else {
+            audioRef.current.pause();
+        }
+    }, [isPlaying]);
+
+    // Automatically play next when song ends
+    useEffect(() => {
+        const handleEnded = () => playNext();
+
+        // Add a safety check to prevent the error
+        if (audioRef.current) {
+            audioRef.current.addEventListener("ended", handleEnded);
+            return () => {
+                if (audioRef.current) {
+                    audioRef.current.removeEventListener("ended", handleEnded);
+                }
+            };
+        }
+        return undefined;
+    }, [queue]);
+
     const playSong = (song, songList = []) => {
         setCurrentSong(song);
-
-        // If songList is provided, set it as the queue, excluding the current song
         if (songList.length > 0) {
-            const remainingSongs = songList.filter(s => s.id !== song.id);
-            setQueue(remainingSongs);
+            const remaining = songList.filter(s => s.id !== song.id);
+            setQueue(remaining);
         }
-
         setIsPlaying(true);
     };
 
     const playNext = () => {
         if (queue.length === 0) return;
-
-        const nextSong = queue[0];
-        const newQueue = queue.slice(1);
-
-        setCurrentSong(nextSong);
-        setQueue(newQueue);
+        const next = queue[0];
+        setQueue(queue.slice(1));
+        setCurrentSong(next);
         setIsPlaying(true);
     };
 
     const playPrevious = () => {
-        // This is simplified - a real implementation would need to maintain
-        // a history of played songs
-        if (!currentSong) return;
-        // For now, just restart the current song
-        if (currentSong) {
-            setCurrentSong({...currentSong});
+        // Just restart for now
+        if (currentSong && audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play();
         }
     };
 
     const togglePlay = () => {
-        if (currentSong) {
-            setIsPlaying(!isPlaying);
-        }
-    };
-
-    const toggleFullScreen = () => {
-        setIsFullScreenMode(!isFullScreenMode);
+        if (currentSong) setIsPlaying(prev => !prev);
     };
 
     const stopPlayback = () => {
         setIsPlaying(false);
-        setIsFullScreenMode(false);
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
     };
 
-    // New function to completely clear the player
     const clearCurrentSong = () => {
+        stopPlayback();
         setCurrentSong(null);
-        setIsPlaying(false);
-        setIsFullScreenMode(false);
     };
 
     const value = {
         currentSong,
         isPlaying,
-        isFullScreenMode,
         queue,
+        isFullScreenMode,
         playSong,
         playNext,
         playPrevious,
         togglePlay,
         setIsPlaying,
-        toggleFullScreen,
+        toggleFullScreen: () => setIsFullScreenMode(prev => !prev),
         stopPlayback,
-        clearCurrentSong
+        clearCurrentSong,
     };
 
     return (
         <MusicPlayerContext.Provider value={value}>
             {children}
+            {/* Remove this line to fix the conflict */}
+            {/* <audio ref={audioRef} /> */}
         </MusicPlayerContext.Provider>
     );
 };
