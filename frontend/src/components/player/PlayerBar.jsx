@@ -37,7 +37,7 @@ const PlayerBar = () => {
             }
 
             // Try to use current domain's API endpoint
-            const apiUrl = `http://lamebeats.steamfest.live/api/songs/${songId}/preview`;
+            const apiUrl = `http://35.209.62.223/api/songs/${songId}/preview`;
 
             console.log(`Fetching preview from: ${apiUrl}`);
 

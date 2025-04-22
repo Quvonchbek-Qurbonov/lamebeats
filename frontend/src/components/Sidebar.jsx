@@ -35,23 +35,22 @@ export default function Sidebar() {
                 </nav>
 
                 <div className="mt-10 space-y-4 text-sm">
-                    <a href="/artists" className="flex items-center gap-3 hover:text-red-400">
+                    <button  onClick={() => navigate('/admin/artists')} className="flex items-center gap-3 hover:text-red-400">
                         <Speech size={18}/> Artists
-                    </a>
-                    <a href="/albums" className="flex items-center gap-3 hover:text-red-400">
+                    </button>
+                    <button  onClick={() => navigate('/admin/albums')} className="flex items-center gap-3 hover:text-red-400">
                         <Disc3 size={18}/> Albums
-                    </a>
-                    <a href="/songs" className="flex items-center gap-3 hover:text-red-400">
+                    </button>
+                    <button onClick={() => navigate('/admin/Songs')} className="flex items-center gap-3 hover:text-red-400">
                         <Music2 size={18}/> Songs
-                    </a>
+                    </button>
                 </div>
             </div>
 
             <div className="text-xs text-gray-400 space-y-1">
                 <button
                     onClick={handleLogout}
-                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out"
-                >
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-full transition duration-300 ease-in-out">
                     Logout
                 </button>
             </div>
